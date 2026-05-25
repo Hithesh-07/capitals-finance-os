@@ -1,0 +1,24 @@
+{
+  "name": "CapitalS Financial OS",
+  "short_name": "CapitalS",
+  "description": "Student-first financial operating system with Brokeman mode runway predictions, active EMI tracking, and split ledgers.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/bottts/png?seed=CapitalS&backgroundColor=000000",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://api.dicebear.com/7.x/bottts/png?seed=CapitalS&backgroundColor=000000",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

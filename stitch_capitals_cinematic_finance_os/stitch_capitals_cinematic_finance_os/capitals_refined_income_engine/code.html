@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CapitalS - Income Engine</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config injected from requirement -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#72ff70",
+                        "surface-container-highest": "#353534",
+                        "on-primary-fixed": "#002021",
+                        "primary-fixed": "#63f7ff",
+                        "surface-container-lowest": "#0e0e0e",
+                        "primary": "#e9feff",
+                        "secondary-fixed-dim": "#dcb8ff",
+                        "tertiary": "#eeffe6",
+                        "inverse-primary": "#00696e",
+                        "on-error-container": "#ffdad6",
+                        "background": "#131313",
+                        "surface-variant": "#353534",
+                        "on-primary": "#003739",
+                        "outline-variant": "#3a494a",
+                        "surface-dim": "#131313",
+                        "tertiary-fixed-dim": "#00e639",
+                        "on-secondary-container": "#dcb7ff",
+                        "surface-container-high": "#2a2a2a",
+                        "on-secondary-fixed-variant": "#6700b5",
+                        "on-error": "#690005",
+                        "on-tertiary": "#003907",
+                        "surface": "#131313",
+                        "on-primary-fixed-variant": "#004f53",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#b9caca",
+                        "inverse-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "surface-bright": "#3a3939",
+                        "inverse-on-surface": "#313030",
+                        "primary-fixed-dim": "#00dce5",
+                        "on-secondary": "#480081",
+                        "surface-tint": "#00dce5",
+                        "secondary-fixed": "#efdbff",
+                        "secondary": "#dcb8ff",
+                        "on-tertiary-fixed": "#002203",
+                        "on-background": "#e5e2e1",
+                        "surface-container-low": "#1c1b1b",
+                        "on-primary-container": "#006c71",
+                        "surface-container": "#201f1f",
+                        "secondary-container": "#7701d0",
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#2bff49",
+                        "on-tertiary-fixed-variant": "#00530e",
+                        "primary-container": "#00f5ff",
+                        "on-secondary-fixed": "#2c0051",
+                        "outline": "#849495",
+                        "on-tertiary-container": "#007117"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "unit": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "numeric-data": ["Geist", "sans-serif"],
+                        "display-lg-mobile": ["Geist", "sans-serif"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "display-lg": ["Geist", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Geist", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "numeric-data": ["24px", { "lineHeight": "1.0", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "500" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Keyframes for Kinetic Glassmorphism Effects */
+        @keyframes liquid-shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+        .animate-liquid-shimmer {
+            animation: liquid-shimmer 8s infinite linear; /* SLOWED DOWN */
+        }
+        
+        @keyframes float-subtle {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(-4px) translateX(2px); } /* REDUCED MOVEMENT */
+        }
+        .animate-float-1 { animation: float-subtle 8s ease-in-out infinite; }
+        .animate-float-2 { animation: float-subtle 9s ease-in-out infinite reverse; }
+        .animate-float-3 { animation: float-subtle 7.5s ease-in-out infinite 1s; }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.05; transform: scale(1); } /* SUBTLE BREATHING, LOW OPACITY */
+            50% { opacity: 0.1; transform: scale(1); }
+        }
+        .animate-pulse-glow {
+            animation: pulse-glow 8s ease-in-out infinite; /* SLOWED DOWN */
+        }
+        
+        @keyframes heartbeat-pulse {
+            0%, 100% { box-shadow: 0 0 4px #72ff70, 0 0 8px rgba(114, 255, 112, 0.1); opacity: 0.8; transform: scale(1); }
+            50% { box-shadow: 0 0 8px #72ff70, 0 0 16px rgba(114, 255, 112, 0.2); opacity: 1; transform: scale(1.05); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat-pulse 4s ease-in-out infinite; /* SLOWED DOWN */
+        }
+
+        @keyframes particle-drift {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.1; } /* DIMMED */
+            90% { opacity: 0.1; } /* DIMMED */
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes flow-particle {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            20% { opacity: 0.3; } /* DIMMED */
+            80% { opacity: 0.3; } /* DIMMED */
+            100% { transform: translate(150px, 0) scale(0); opacity: 0; }
+        }
+
+        /* Fluid Glass Grid Base Styles */
+        body {
+            background-color: #050505; /* DEEP OBSIDIAN BLACK */
+            color: #ffffff;
+            /* 3D Grid background simulation - slightly dimmer */
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 64px 64px;
+            background-position: center top;
+        }
+
+        /* Glass Panel Utility */
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.8); /* MORE OPAQUE BACKGROUND */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2); /* SHARPER BORDER */
+            /* Inner Rim Light Simulation */
+            box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .glass-panel:hover {
+            background: rgba(30, 30, 30, 0.9); /* OPAQUE ON HOVER */
+            border: 1px solid rgba(0, 220, 229, 0.4); /* HIGH CONTRAST HOVER BORDER */
+            box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 0 0 10px rgba(0, 220, 229, 0.1);
+        }
+        
+        /* Reveal Animations */
+        .vault-reveal {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .vault-reveal.is-visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .particles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(0, 220, 229, 0.15); /* VERY DIMMED particles */
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .flow-particle {
+            position: absolute;
+            background: rgba(0, 220, 229, 0.3); /* DIMMED flow particles */
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            box-shadow: 0 0 2px rgba(0, 220, 229, 0.2); /* REDUCED shadow */
+            animation: flow-particle 6s infinite cubic-bezier(0.25, 0.8, 0.25, 1); /* SLOWED DOWN */
+        }
+        
+        .flow-container {
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            transform: translateY(-50%);
+            width: 150px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed flex flex-col relative">
+<!-- Atmospheric Deep Canvas Glow - EXTREMELY DIMMED AND BREATHING -->
+<div class="fixed inset-0 pointer-events-none z-[-1] flex items-center justify-center">
+<div class="w-[80vw] h-[819px] rounded-full bg-primary-fixed blur-[150px] animate-pulse-glow"></div>
+<div class="absolute w-[60vw] h-[614px] rounded-full bg-secondary-fixed opacity-[0.01] blur-[120px] mix-blend-screen translate-x-1/4"></div>
+</div>
+<!-- Background Particles Container -->
+<div class="fixed inset-0 pointer-events-none z-[-1]" id="bg-particles"></div>
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 left-0 w-full z-[100] border-b border-white/10 bg-black/50 backdrop-blur-2xl">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-gutter w-full max-w-container-max mx-auto">
+<!-- Brand Logo -->
+<a class="font-display-lg text-primary-fixed tracking-tighter brightness-125 text-2xl" href="#" style="font-size: 28px;">CapitalS</a>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label-caps text-label-caps text-white/70 hover:text-white transition-colors uppercase" href="#">Market</a>
+<a class="font-label-caps text-label-caps text-white/70 hover:text-white transition-colors uppercase" href="#">Liquid</a>
+<!-- ACTIVE TAB LOGIC: 'Income Engine' implies financial growth/aggregation. Mapping to 'Growth'. -->
+<a class="font-label-caps text-label-caps text-primary-fixed border-b border-primary-fixed pb-1 uppercase" href="#">Growth</a>
+<a class="font-label-caps text-label-caps text-white/70 hover:text-white transition-colors uppercase" href="#">Pulse</a>
+</nav>
+<!-- Trailing Action -->
+<button class="bg-primary-fixed text-on-primary-fixed px-6 py-2 rounded-full font-label-caps text-label-caps uppercase magnetic-pull cursor-pointer active:scale-95 hover:scale-105 hover:shadow-[0_0_15px_rgba(0,220,229,0.2)] transition-all duration-300">
+                Get Started
+            </button>
+</div>
+</header>
+<!-- SideNavBar (Shared Component - Hidden on Mobile) -->
+<aside class="hidden xl:flex flex-col items-center gap-4 z-[90] fixed right-8 top-1/2 -translate-y-1/2 w-12 scroll-snap-indicator">
+<!-- Tab 1: Timeline -->
+<a aria-label="Timeline" class="group relative flex justify-center w-full" href="#">
+<div class="bg-white/20 w-1 h-8 rounded-full group-hover:bg-white/50 transition-colors"></div>
+<span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity font-label-caps text-label-caps text-white/70 whitespace-nowrap">Timeline</span>
+</a>
+<!-- Tab 2: Story -->
+<a aria-label="Story" class="group relative flex justify-center w-full" href="#">
+<div class="bg-white/20 w-1 h-8 rounded-full group-hover:bg-white/50 transition-colors"></div>
+<span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity font-label-caps text-label-caps text-white/70 whitespace-nowrap">Story</span>
+</a>
+<!-- ACTIVE TAB LOGIC: 'Income Engine' tracks ongoing impact/monitoring. Mapping to 'Impact' (monitoring icon). -->
+<a aria-label="Impact" class="group relative flex justify-center w-full" href="#">
+<div class="bg-primary-fixed w-3 h-12 rounded-full shadow-[0_0_10px_rgba(0,220,229,0.5)] transition-all"></div>
+<span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 opacity-100 font-label-caps text-label-caps text-primary-fixed whitespace-nowrap">Impact</span>
+</a>
+<!-- Tab 4: Vision -->
+<a aria-label="Vision" class="group relative flex justify-center w-full" href="#">
+<div class="bg-white/20 w-1 h-8 rounded-full group-hover:bg-white/50 transition-colors"></div>
+<span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity font-label-caps text-label-caps text-white/70 whitespace-nowrap">Vision</span>
+</a>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-40 pb-32 relative z-10 flex flex-col gap-16">
+<!-- Hero Section -->
+<section class="text-center w-full max-w-3xl mx-auto flex flex-col gap-4">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-white tracking-tighter">
+                Your Income, <span class="text-primary-fixed drop-shadow-[0_0_4px_rgba(99,247,255,0.4)]">Orchestrated.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-white/70 max-w-xl mx-auto">
+                Real-time aggregation of your financial streams. Watch your capital coalesce into a unified, high-yield force within the kinetic vault.
+            </p>
+</section>
+<!-- Income Engine Layout (Bento Grid / Asymmetric) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative" id="engine-section">
+<!-- Background connecting lines simulation (SVG) - VERY DIMMED -->
+<div class="absolute inset-0 pointer-events-none z-[-1] hidden lg:block overflow-hidden">
+<svg class="opacity-5" height="100%" width="100%">
+<path class="animate-pulse-glow" d="M 300, 100 C 450, 100 500, 250 600, 250" fill="none" stroke="url(#cyan-glow)" stroke-width="2"></path>
+<path d="M 300, 300 C 450, 300 500, 250 600, 250" fill="none" stroke="url(#cyan-glow)" stroke-width="2"></path>
+<path class="animate-pulse-glow" d="M 300, 500 C 450, 500 500, 250 600, 250" fill="none" stroke="url(#violet-glow)" stroke-width="2" style="animation-delay: 1s;"></path>
+<defs>
+<lineargradient id="cyan-glow" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#00dce5" stop-opacity="0"></stop>
+<stop offset="100%" stop-color="#00dce5" stop-opacity="1"></stop>
+</lineargradient>
+<lineargradient id="violet-glow" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#7701d0" stop-opacity="0"></stop>
+<stop offset="100%" stop-color="#7701d0" stop-opacity="1"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<!-- LEFT COLUMN: Income Streams (Floating Cards) -->
+<div class="lg:col-span-4 flex flex-col gap-6 justify-center z-10">
+<!-- Stream 1: Internship -->
+<div class="glass-panel p-6 flex items-center justify-between animate-float-1 relative overflow-visible group cursor-pointer">
+<!-- Flow Particles -->
+<div class="flow-container hidden lg:block">
+<div class="flow-particle" style="animation-delay: 0s;"></div>
+<div class="flow-particle" style="animation-delay: 2s;"></div>
+<div class="flow-particle" style="animation-delay: 4s;"></div>
+</div>
+<!-- Liquid Progress Background -->
+<div class="absolute bottom-0 left-0 h-[2px] w-full bg-white/5 overflow-hidden rounded-b-xl">
+<div class="h-full bg-gradient-to-r from-transparent via-primary-fixed to-transparent w-1/2 animate-liquid-shimmer opacity-50"></div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary-fixed/50 transition-colors">
+<span class="material-symbols-outlined text-primary-fixed">work</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-white/70 uppercase tracking-widest">Internship Stipend</p>
+<p class="font-numeric-data text-numeric-data text-white mt-1">$4,250<span class="text-sm text-white/50 ml-1">/mo</span></p>
+</div>
+</div>
+<div class="h-8 w-8 rounded-full bg-tertiary-fixed/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary-fixed" style="font-size: 16px;">trending_up</span>
+</div>
+</div>
+<!-- Stream 2: Freelance -->
+<div class="glass-panel p-6 flex items-center justify-between animate-float-2 relative overflow-visible group cursor-pointer ml-0 lg:ml-8">
+<!-- Flow Particles - DIMMED -->
+<div class="flow-container hidden lg:block" style="right: -40px; transform: translateY(-50%) rotate(10deg);">
+<div class="flow-particle" style="animation-delay: 1s; background: rgba(220, 184, 255, 0.3); box-shadow: 0 0 2px rgba(220, 184, 255, 0.2);"></div>
+<div class="flow-particle" style="animation-delay: 3s; background: rgba(220, 184, 255, 0.3); box-shadow: 0 0 2px rgba(220, 184, 255, 0.2);"></div>
+<div class="flow-particle" style="animation-delay: 5s; background: rgba(220, 184, 255, 0.3); box-shadow: 0 0 2px rgba(220, 184, 255, 0.2);"></div>
+</div>
+<!-- Liquid Progress Background -->
+<div class="absolute bottom-0 left-0 h-[2px] w-full bg-white/5 overflow-hidden rounded-b-xl">
+<div class="h-full bg-gradient-to-r from-transparent via-secondary-fixed to-transparent w-1/3 animate-liquid-shimmer opacity-50" style="animation-delay: 2s;"></div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-secondary-fixed/50 transition-colors">
+<span class="material-symbols-outlined text-secondary-fixed">code</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-white/70 uppercase tracking-widest">Freelance</p>
+<p class="font-numeric-data text-numeric-data text-white mt-1">$1,800<span class="text-sm text-white/50 ml-1">/avg</span></p>
+</div>
+</div>
+<div class="h-8 w-8 rounded-full bg-tertiary-fixed/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary-fixed" style="font-size: 16px;">sync</span>
+</div>
+</div>
+<!-- Stream 3: Dividend -->
+<div class="glass-panel p-6 flex items-center justify-between animate-float-3 relative overflow-visible group cursor-pointer">
+<!-- Flow Particles -->
+<div class="flow-container hidden lg:block" style="transform: translateY(-50%) rotate(-10deg);">
+<div class="flow-particle" style="animation-delay: 0.5s;"></div>
+<div class="flow-particle" style="animation-delay: 2.5s;"></div>
+<div class="flow-particle" style="animation-delay: 4.5s;"></div>
+</div>
+<!-- Liquid Progress Background -->
+<div class="absolute bottom-0 left-0 h-[2px] w-full bg-white/5 overflow-hidden rounded-b-xl">
+<div class="h-full bg-gradient-to-r from-transparent via-primary-fixed to-transparent w-1/4 animate-liquid-shimmer opacity-50" style="animation-delay: 1s;"></div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary-fixed/50 transition-colors">
+<span class="material-symbols-outlined text-primary-fixed">pie_chart</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-white/70 uppercase tracking-widest">Dividend</p>
+<p class="font-numeric-data text-numeric-data text-white mt-1">$320<span class="text-sm text-white/50 ml-1">/qtr</span></p>
+</div>
+</div>
+<div class="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-white/70" style="font-size: 16px;">schedule</span>
+</div>
+</div>
+</div>
+<!-- CENTER COLUMN: The Vault -->
+<div class="lg:col-span-4 flex items-center justify-center relative min-h-[400px]">
+<!-- Outer Glow Aura - EXTREMELY DIMMED AND BREATHING -->
+<div class="absolute w-[120%] h-[120%] rounded-full bg-primary-fixed/5 blur-[100px] animate-pulse-glow z-0"></div>
+<!-- Particles Burst Container -->
+<div class="particles-container" id="vault-particles"></div>
+<!-- Central Vault Glass Orb/Card -->
+<div class="glass-panel vault-reveal w-full aspect-square rounded-full flex flex-col items-center justify-center relative z-10 border border-primary-fixed/20 shadow-none hover:scale-[1.02] transition-transform duration-500" id="main-vault">
+<!-- Holographic inner ring -->
+<div class="absolute inset-4 rounded-full border border-white/10 border-dashed animate-[spin_60s_linear_infinite]"></div>
+<div class="absolute inset-8 rounded-full border border-primary-fixed/20 animate-[spin_40s_linear_infinite_reverse]"></div>
+<span class="material-symbols-outlined text-primary-fixed/80 mb-2" style="font-size: 32px; font-variation-settings: 'FILL' 1;">account_balance</span>
+<h2 class="font-label-caps text-label-caps text-white/70 uppercase tracking-widest mb-2">Total Inflow Velocity</h2>
+<!-- High-Contrast Numeric Data - SOLID WHITE FOR LEGIBILITY -->
+<div class="font-display-lg text-display-lg-mobile md:text-display-lg text-white drop-shadow-sm tracking-tighter">
+                        $6,370<span class="text-3xl text-white/70">.00</span>
+</div>
+<div class="mt-4 px-4 py-1 rounded-full border border-tertiary-fixed/30 bg-tertiary-fixed/10 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed animate-heartbeat"></div>
+<span class="font-label-caps text-label-caps text-tertiary-fixed">Active Processing</span>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Analytics / Growth -->
+<div class="lg:col-span-4 flex flex-col justify-center gap-6 z-10">
+<!-- Chart Card (Glassmorphism) -->
+<div class="glass-panel p-6 h-full min-h-[300px] flex flex-col relative group">
+<div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+<h3 class="font-headline-md text-headline-md text-white text-xl">Trajectory</h3>
+<span class="material-symbols-outlined text-white/70">monitoring</span>
+</div>
+<div class="flex-grow flex items-end gap-2 relative">
+<!-- Abstract Neon Tube Chart Simulation -->
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxwb2x5bGluZSBwb2ludHM9IjAsMTAwIDUwLDgwIDEwMCw5MCAxNTAsNTAgMjAwLDcwIDI1MCwzMCAzMDAsMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY0ZjdmZiIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+')] bg-no-repeat bg-bottom bg-contain opacity-20 hidden"></div>
+<!-- Using CSS structure for a stylized bar chart instead of raw SVG to ensure safety and style compliance -->
+<div class="flex-1 w-full h-full flex items-end justify-between px-2">
+<!-- Bars with Holographic aesthetic -->
+<div class="w-8 h-[30%] bg-white/10 border-t border-primary-fixed/30 rounded-t-sm relative group-hover:bg-white/20 transition-colors"></div>
+<div class="w-8 h-[45%] bg-white/10 border-t border-primary-fixed/40 rounded-t-sm relative group-hover:bg-white/20 transition-colors"></div>
+<div class="w-8 h-[35%] bg-white/10 border-t border-primary-fixed/30 rounded-t-sm relative group-hover:bg-white/20 transition-colors"></div>
+<div class="w-8 h-[60%] bg-gradient-to-t from-white/10 to-primary-fixed/30 border-t border-primary-fixed rounded-t-sm relative shadow-[0_-5px_10px_rgba(0,220,229,0.1)]">
+<!-- Data point dot -->
+<div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white shadow-[0_0_5px_#fff]"></div>
+</div>
+</div>
+</div>
+<div class="mt-4 flex justify-between items-center text-white/70 font-label-caps text-label-caps">
+<span>Q1</span>
+<span>Q2</span>
+<span>Q3</span>
+<span class="text-primary-fixed">Q4 (Proj)</span>
+</div>
+</div>
+<!-- Small Action Chip -->
+<button class="glass-panel p-4 flex justify-between items-center hover:bg-white/5 group transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary-fixed">add_circle</span>
+<span class="font-label-caps text-label-caps text-white uppercase">Connect Source</span>
+</div>
+<span class="material-symbols-outlined text-white/70 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="mt-auto w-full py-16 bg-[#050505] border-t border-white/5 z-50 relative">
+<div class="flex flex-col items-center justify-center gap-8 px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto">
+<!-- Brand Mark Subdued -->
+<div class="font-display-lg text-white opacity-10 text-4xl mb-4">CapitalS</div>
+<!-- Footer Links -->
+<nav class="flex flex-wrap justify-center gap-8">
+<a class="font-label-caps text-label-caps text-white/60 hover:text-white transition-all hover:translate-y-[-2px] uppercase" href="#">Privacy</a>
+<a class="font-label-caps text-label-caps text-white/60 hover:text-white transition-all hover:translate-y-[-2px] uppercase" href="#">Protocol</a>
+<a class="font-label-caps text-label-caps text-white/60 hover:text-white transition-all hover:translate-y-[-2px] uppercase" href="#">Security</a>
+<a class="font-label-caps text-label-caps text-white/60 hover:text-white transition-all hover:translate-y-[-2px] uppercase" href="#">Contact</a>
+</nav>
+<!-- Copyright -->
+<p class="font-body-md text-body-md text-white/40 text-sm text-center mt-4">
+                © 2024 CapitalS. Engineered for the Future of Finance.
+            </p>
+</div>
+</footer>
+<script>
+    // Logic for animations and background effects
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Background Particles
+        const bgContainer = document.getElementById('bg-particles');
+        const particleCount = 20; // Reduced particle count
+
+        for (let i = 0; i < particleCount; i++) {
+            createParticle(bgContainer, true);
+        }
+
+        function createParticle(container, isBg) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            const size = Math.random() * 3 + 1;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = isBg ? `${Math.random() * 100}%` : '50%';
+            
+            if (!isBg) {
+                particle.style.left = '50%';
+            }
+
+            const duration = Math.random() * 30 + 20; // Slowed down
+            const delay = Math.random() * 15;
+            
+            particle.style.animation = `particle-drift ${duration}s linear ${delay}s infinite`;
+            
+            if (!isBg) {
+                // Burst effect for vault
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 200 + 50;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.animate([
+                    { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.4 },
+                    { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 1500 + 1500, // Slowed down
+                    easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)',
+                    fill: 'forwards'
+                });
+            }
+
+            container.appendChild(particle);
+        }
+
+        // 2. Intersection Observer for Vault Reveal
+        const vault = document.getElementById('main-vault');
+        const engineSection = document.getElementById('engine-section');
+        const vaultParticlesContainer = document.getElementById('vault-particles');
+        
+        let hasRevealed = false;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !hasRevealed) {
+                    hasRevealed = true;
+                    // Trigger Reveal
+                    vault.classList.add('is-visible');
+                    
+                    // Trigger Particle Burst
+                    for (let i = 0; i < 30; i++) { // Reduced burst count
+                        createParticle(vaultParticlesContainer, false);
+                    }
+                }
+            });
+        }, {
+            threshold: 0.3 // Trigger when 30% of the section is visible
+        });
+
+        if (engineSection) {
+            observer.observe(engineSection);
+        }
+    });
+</script>
+</body></html>
