@@ -160,12 +160,11 @@ body {
   left: -50%;
 }
 
-.orbit-track.paused {
+.paused {
   animation-play-state: paused !important;
 }
 
 .orb:hover {
-  transform: scale(1.2) translateZ(60px) !important;
   box-shadow: inset 0 0 35px rgba(255,255,255,0.25), 0 0 60px rgba(0,220,229,0.4) !important;
   z-index: 50;
 }
@@ -181,18 +180,37 @@ body {
 }
 
 @keyframes orbit {
-  from { transform: rotateY(0deg) rotateX(12deg); }
-  to { transform: rotateY(360deg) rotateX(12deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes orbit-reverse {
-  from { transform: rotateY(360deg) rotateX(-6deg); }
-  to { transform: rotateY(0deg) rotateX(-6deg); }
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes counter-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes counter-orbit-reverse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.orbit-counter {
+  animation: counter-orbit 20s linear infinite;
+}
+
+.orbit-counter-reverse {
+  animation: counter-orbit-reverse 30s linear infinite;
 }
 
 .orbit-rotate {
   animation: orbit 24s linear infinite;
 }
+
 .orbit-rotate-reverse {
   animation: orbit-reverse 30s linear infinite;
 }

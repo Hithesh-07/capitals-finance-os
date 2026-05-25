@@ -41,17 +41,22 @@ export default function ExpenseOrbit() {
         style={{ animationDuration: '20s' }}
       >
         <div 
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          className="orb w-36 h-36 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-tertiary-fixed/30 bg-tertiary-fixed/5 backdrop-blur-md"
-          style={{ transform: 'translate3d(140px, -20px, 0)' }}
+          style={{ transform: 'translate3d(140px, -20px, 0) translate(-50%, -50%)' }}
+          className="absolute"
         >
-          <Coffee className="w-5 h-5 text-tertiary-fixed mb-1" />
-          <span className="font-mono text-[9px] uppercase tracking-wider text-tertiary-fixed">Food</span>
-          
-          <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-3 text-center">
-            <span className="font-display font-bold text-white text-base">₹{foodTotal.toLocaleString('en-IN')}</span>
-            <span className="font-mono text-[8px] text-[#849495] mt-1">Zomato / Mess</span>
+          <div 
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className={`orb w-36 h-36 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-tertiary-fixed/30 bg-tertiary-fixed/5 backdrop-blur-md orbit-counter ${isPaused ? 'paused' : ''}`}
+            style={{ animationDuration: '20s' }}
+          >
+            <Coffee className="w-5 h-5 text-tertiary-fixed mb-1" />
+            <span className="font-mono text-[9px] uppercase tracking-wider text-tertiary-fixed">Food</span>
+            
+            <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-3 text-center">
+              <span className="font-display font-bold text-white text-base">₹{foodTotal.toLocaleString('en-IN')}</span>
+              <span className="font-mono text-[8px] text-[#849495] mt-1">Zomato / Mess</span>
+            </div>
           </div>
         </div>
       </div>
@@ -62,17 +67,22 @@ export default function ExpenseOrbit() {
         style={{ animationDuration: '28s' }}
       >
         <div 
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          className="orb w-32 h-32 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-secondary/30 bg-secondary/5 backdrop-blur-md"
-          style={{ transform: 'translate3d(-180px, 30px, 0)' }}
+          style={{ transform: 'translate3d(-180px, 30px, 0) translate(-50%, -50%)' }}
+          className="absolute"
         >
-          <Film className="w-4 h-4 text-secondary mb-1" />
-          <span className="font-mono text-[9px] uppercase tracking-wider text-secondary">Subs</span>
-          
-          <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-3 text-center">
-            <span className="font-display font-bold text-white text-sm">₹{subsTotal.toLocaleString('en-IN')}</span>
-            <span className="font-mono text-[8px] text-[#849495] mt-1">Streaming/Apps</span>
+          <div 
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className={`orb w-32 h-32 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-secondary/30 bg-secondary/5 backdrop-blur-md orbit-counter-reverse ${isPaused ? 'paused' : ''}`}
+            style={{ animationDuration: '28s' }}
+          >
+            <Film className="w-4 h-4 text-secondary mb-1" />
+            <span className="font-mono text-[9px] uppercase tracking-wider text-secondary">Subs</span>
+            
+            <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-3 text-center">
+              <span className="font-display font-bold text-white text-sm">₹{subsTotal.toLocaleString('en-IN')}</span>
+              <span className="font-mono text-[8px] text-[#849495] mt-1">Streaming/Apps</span>
+            </div>
           </div>
         </div>
       </div>
@@ -83,17 +93,22 @@ export default function ExpenseOrbit() {
         style={{ animationDuration: '35s' }}
       >
         <div 
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          className="orb w-40 h-40 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-primary-fixed/30 bg-primary-fixed/5 backdrop-blur-md"
-          style={{ transform: 'translate3d(100px, 200px, 0)' }}
+          style={{ transform: 'translate3d(100px, 200px, 0) translate(-50%, -50%)' }}
+          className="absolute"
         >
-          <Plane className="w-6 h-6 text-primary-fixed mb-1" />
-          <span className="font-mono text-[9px] uppercase tracking-wider text-primary-fixed">Travel</span>
-          
-          <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-4 text-center">
-            <span className="font-display font-bold text-white text-base">₹{travelTotal.toLocaleString('en-IN')}</span>
-            <span className="font-mono text-[8px] text-[#849495] mt-1">Uber / Metro</span>
+          <div 
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className={`orb w-40 h-40 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-primary-fixed/30 bg-primary-fixed/5 backdrop-blur-md orbit-counter ${isPaused ? 'paused' : ''}`}
+            style={{ animationDuration: '35s' }}
+          >
+            <Plane className="w-6 h-6 text-primary-fixed mb-1" />
+            <span className="font-mono text-[9px] uppercase tracking-wider text-primary-fixed">Travel</span>
+            
+            <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-4 text-center">
+              <span className="font-display font-bold text-white text-base">₹{travelTotal.toLocaleString('en-IN')}</span>
+              <span className="font-mono text-[8px] text-[#849495] mt-1">Uber / Metro</span>
+            </div>
           </div>
         </div>
       </div>
@@ -104,16 +119,21 @@ export default function ExpenseOrbit() {
         style={{ animationDuration: '15s' }}
       >
         <div 
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          className="orb w-24 h-24 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-[#849495]/30 bg-[#849495]/5 backdrop-blur-md"
-          style={{ transform: 'translate3d(-100px, -150px, 0)' }}
+          style={{ transform: 'translate3d(-100px, -150px, 0) translate(-50%, -50%)' }}
+          className="absolute"
         >
-          <LayoutGrid className="w-4 h-4 text-[#849495] mb-1" />
-          <span className="font-mono text-[8px] uppercase tracking-wider text-[#849495]">Misc</span>
-          
-          <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-2 text-center">
-            <span className="font-display font-bold text-white text-xs">₹{miscTotal.toLocaleString('en-IN')}</span>
+          <div 
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className={`orb w-24 h-24 rounded-full glass-panel flex flex-col items-center justify-center cursor-pointer border-[#849495]/30 bg-[#849495]/5 backdrop-blur-md orbit-counter-reverse ${isPaused ? 'paused' : ''}`}
+            style={{ animationDuration: '15s' }}
+          >
+            <LayoutGrid className="w-4 h-4 text-[#849495] mb-1" />
+            <span className="font-mono text-[8px] uppercase tracking-wider text-[#849495]">Misc</span>
+            
+            <div className="orb-content absolute inset-0 rounded-full bg-black/95 flex flex-col items-center justify-center p-2 text-center">
+              <span className="font-display font-bold text-white text-xs">₹{miscTotal.toLocaleString('en-IN')}</span>
+            </div>
           </div>
         </div>
       </div>
