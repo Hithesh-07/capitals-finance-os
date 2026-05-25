@@ -97,7 +97,7 @@ export default function SignupPage() {
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Hithesh Reddy"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/3 border border-white/10 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary-fixed transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary-fixed transition-colors"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@college.edu"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/3 border border-white/10 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary-fixed transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary-fixed transition-colors"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/3 border border-white/10 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary-fixed transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary-fixed transition-colors"
               />
             </div>
           </div>
