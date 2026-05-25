@@ -370,6 +370,7 @@ interface FinanceState {
   addReminder: (title: string, amount: number | undefined, dueDate: string, type: Reminder['type'], reminderTime?: string, autopay?: boolean) => Promise<void>;
   markReminderPaid: (reminderId: string) => Promise<void>;
   addFriend: (name: string, phone?: string, upiId?: string) => Promise<void>;
+  deleteFriend: (friendId: string) => Promise<void>;
   addSharedExpense: (paidBy: string, amount: number, description: string, splitBetween: string[], tripId?: string) => Promise<void>;
   settleSplitBill: (sharedExpenseId: string, fromUser: string, toUser: string, amount: number) => Promise<void>;
   addSubscription: (name: string, amount: number, renewalDate: string, frequency: string, category?: string, sharedWith?: string[], splitRatio?: number[]) => Promise<void>;
@@ -444,7 +445,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
               supabase!.from('reminders').select('*').eq('user_id', userId),
               supabase!.from('friends').select('*').eq('user_id', userId),
               supabase!.from('shared_expenses').select('*').eq('user_id', userId),
-              supabase!.from('settlements').select('*').eq('shared_expense_id', 'any'), // fetched inside individual controllers or split query
+              supabase!.from('settlements').select('*, shared_expenses!inner(user_id)').eq('shared_expenses.user_id', userId),
               supabase!.from('subscriptions').select('*').eq('user_id', userId),
               supabase!.from('ai_insights').select('*').eq('user_id', userId).eq('dismissed', false),
             ]);
@@ -847,6 +848,18 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, loans: updated }));
     }
+
+    // Auto-register a reminder so this loan's EMI appears on the Calendar
+    try {
+      await get().addReminder(
+        `EMI: ${lenderName}`,
+        emiAmount,
+        dueDate,
+        'loan',
+        '09:00:00',
+        false
+      );
+    } catch (_) { /* best-effort */ }
   },
 
   payLoanEmi: async (loanId, emiAmount) => {
@@ -939,6 +952,18 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, sips: updated }));
     }
+
+    // Auto-register a reminder so this SIP appears on the Calendar
+    try {
+      await get().addReminder(
+        `SIP Auto-Debit: ${fundName}`,
+        monthlyAmount,
+        nextPaymentDate,
+        'sip',
+        '09:00:00',
+        false
+      );
+    } catch (_) { /* best-effort */ }
   },
 
   updateSipValue: async (sipId, currentVal) => {
@@ -1194,6 +1219,20 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     }
   },
 
+  deleteFriend: async (friendId) => {
+    const { isPreviewMode, friends } = get();
+    const updated = friends.filter(f => f.id !== friendId);
+    
+    if (!isPreviewMode && supabase) {
+      await supabase.from('friends').delete().eq('id', friendId);
+      await get().init();
+    } else {
+      set({ friends: updated });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, friends: updated }));
+    }
+  },
+
   addSharedExpense: async (paidBy, amount, description, splitBetween, tripId) => {
     const { isPreviewMode, user, sharedExpenses } = get();
     const currentUserId = user?.id || 'user-mock-123';
@@ -1256,10 +1295,18 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       settled_at: new Date().toISOString()
     };
 
-    // Update shared expense settled flag locally if settling fully or partially
+    // Determine whether ALL other participants of this bill have settled
+    const updatedSettlements = [newSettlement, ...settlements];
     const updatedShared = sharedExpenses.map(se => {
       if (se.id === sharedExpenseId) {
-        return { ...se, settled: true }; // Mark settled for simplicity in mock
+        // Other participants = everyone who is NOT the original payer
+        const otherParticipants = se.split_between.filter(p => p !== se.paid_by);
+        // Count how many of those now have a settlement record (including the new one)
+        const settledCount = updatedSettlements.filter(
+          s => s.shared_expense_id === sharedExpenseId
+        ).length;
+        const isFullySettled = settledCount >= otherParticipants.length;
+        return { ...se, settled: isFullySettled };
       }
       return se;
     });
@@ -1271,10 +1318,21 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         to_user: toUser,
         amount
       });
-      await supabase.from('shared_expenses').update({ settled: true }).eq('id', sharedExpenseId);
+      // Only mark the shared expense as fully settled when everyone has paid
+      const se = sharedExpenses.find(e => e.id === sharedExpenseId);
+      if (se) {
+        const otherParticipants = se.split_between.filter(p => p !== se.paid_by);
+        const { count } = await supabase
+          .from('settlements')
+          .select('id', { count: 'exact', head: true })
+          .eq('shared_expense_id', sharedExpenseId);
+        const isFullySettled = (count ?? 0) + 1 >= otherParticipants.length;
+        if (isFullySettled) {
+          await supabase.from('shared_expenses').update({ settled: true }).eq('id', sharedExpenseId);
+        }
+      }
       await get().init();
     } else {
-      const updatedSettlements = [newSettlement, ...settlements];
       set({ sharedExpenses: updatedShared, settlements: updatedSettlements });
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ 

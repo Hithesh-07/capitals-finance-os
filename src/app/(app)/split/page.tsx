@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
-  Users, Plus, Send, Phone, BadgePercent, CheckCircle2, MessageSquare, Check, X
+  Users, Plus, Send, Phone, BadgePercent, CheckCircle2, MessageSquare, Check, X, Trash2
 } from 'lucide-react';
 
 export default function SplitExpensesPage() {
   const { 
-    friends, sharedExpenses, addFriend, addSharedExpense, settleSplitBill, user 
+    friends, sharedExpenses, settlements, addFriend, addSharedExpense, settleSplitBill, deleteFriend, user 
   } = useFinanceStore();
 
   const [friendName, setFriendName] = useState('');
@@ -74,14 +74,26 @@ export default function SplitExpensesPage() {
     if (se.paid_by === 'You') {
       se.split_between.forEach(p => {
         if (p !== 'You') {
-          netBalances[p] = (netBalances[p] || 0) + share;
+          // Only count if this person hasn't settled their share for this expense
+          const hasSettled = settlements.some(
+            s => s.shared_expense_id === se.id && s.from_user === p
+          );
+          if (!hasSettled) {
+            netBalances[p] = (netBalances[p] || 0) + share;
+          }
         }
       });
     } else {
       // Someone else paid
       const payer = se.paid_by;
       if (se.split_between.includes('You')) {
-        netBalances[payer] = (netBalances[payer] || 0) - share;
+        // Check if You have already settled your share for this expense
+        const youSettled = settlements.some(
+          s => s.shared_expense_id === se.id && s.from_user === 'You'
+        );
+        if (!youSettled) {
+          netBalances[payer] = (netBalances[payer] || 0) - share;
+        }
       }
     }
   });
@@ -371,6 +383,38 @@ export default function SplitExpensesPage() {
             </form>
           </div>
         )}
+
+        {/* Workspace Friends List */}
+        <div className="glass-panel p-6 rounded-3xl flex flex-col gap-4">
+          <h3 className="font-display font-semibold text-white text-base border-b border-white/5 pb-3 flex items-center justify-between">
+            Workspace Peers
+            <span className="font-mono text-[9px] uppercase text-[#849495]">{friends.length} registered</span>
+          </h3>
+
+          {friends.length === 0 ? (
+            <p className="text-xs text-on-surface-variant font-mono uppercase tracking-wider py-4 text-center">No friends registered yet.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {friends.map(f => (
+                <div key={f.id} className="flex items-center justify-between p-3 rounded-xl bg-white/3 border border-white/5 group">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-white">{f.friend_name}</span>
+                    <span className="text-[10px] font-mono text-[#849495] mt-0.5">
+                      {f.phone ? f.phone : 'No phone'}{f.upi_id ? ` · ${f.upi_id}` : ''}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => deleteFriend(f.id)}
+                    className="p-1.5 rounded-lg border border-white/5 hover:border-red-500/30 text-on-surface-variant hover:text-red-400 hover:bg-red-500/5 opacity-0 group-hover:opacity-100 transition-all"
+                    title="Remove friend"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
 

@@ -326,15 +326,21 @@ export default function TransactionsPage() {
       {/* ADD TRANSACTION & OCR SCANNER MODAL */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md px-margin-mobile">
-          <div className="w-full max-w-[750px] glass-panel rounded-2xl p-6 relative border-white/5 bg-black/90 flex flex-col md:flex-row gap-6 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-[750px] glass-panel rounded-2xl relative border-white/5 bg-black/90 flex flex-col max-h-[90vh] overflow-hidden">
             
-            {/* Close button */}
-            <button 
-              onClick={() => setShowAddModal(false)}
-              className="absolute top-4 right-4 p-2 text-on-surface-variant hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Modal Header bar */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 shrink-0">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-[#849495]">New Ledger Entry</span>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="p-2 text-on-surface-variant hover:text-white rounded-lg hover:bg-white/5 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex flex-col md:flex-row gap-6 overflow-y-auto p-6">
 
             {/* LEFT COLUMN: Receipt OCR Scanner */}
             <div className="flex-1 border-r border-white/5 pr-0 md:pr-6 flex flex-col gap-4">
@@ -390,23 +396,29 @@ export default function TransactionsPage() {
 
             {/* RIGHT COLUMN: Standard Input Form */}
             <div className="flex-1 flex flex-col gap-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3">
                 <h3 className="font-display font-semibold text-white text-base">Standard Input Form</h3>
                 
-                {/* Form type toggle */}
-                <div className="flex border border-white/5 rounded-lg p-0.5 bg-white/2">
+                {/* Full-width segmented tab toggle */}
+                <div className="flex border border-white/5 rounded-xl p-1 bg-white/2 w-full">
                   <button
+                    type="button"
                     onClick={() => setFormType('expense')}
-                    className={`px-3 py-1 rounded-md text-[9px] font-mono uppercase tracking-wider transition-all ${
-                      formType === 'expense' ? 'bg-primary-fixed/10 text-primary-fixed' : 'text-[#b9caca]'
+                    className={`flex-1 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all ${
+                      formType === 'expense' 
+                        ? 'bg-primary-fixed/15 border border-primary-fixed/30 text-primary-fixed font-bold' 
+                        : 'text-[#b9caca] hover:text-white'
                     }`}
                   >
                     Expense
                   </button>
                   <button
+                    type="button"
                     onClick={() => setFormType('income')}
-                    className={`px-3 py-1 rounded-md text-[9px] font-mono uppercase tracking-wider transition-all ${
-                      formType === 'income' ? 'bg-primary-fixed/10 text-primary-fixed' : 'text-[#b9caca]'
+                    className={`flex-1 py-2 rounded-lg text-xs font-mono uppercase tracking-wider transition-all ${
+                      formType === 'income' 
+                        ? 'bg-primary-fixed/15 border border-primary-fixed/30 text-primary-fixed font-bold' 
+                        : 'text-[#b9caca] hover:text-white'
                     }`}
                   >
                     Income
@@ -522,6 +534,7 @@ export default function TransactionsPage() {
               </form>
             </div>
 
+            </div>
           </div>
         </div>
       )}
