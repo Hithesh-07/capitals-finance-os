@@ -320,7 +320,7 @@ begin
     new.email,
     new.raw_user_meta_data->>'avatar_url',
     'undergraduate', -- default
-    10000 -- default 10k allowance
+    0 -- default allowance (set properly during onboarding)
   );
   return new;
 end;

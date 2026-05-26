@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
-  Coins, Plus, Calendar, AlertTriangle, ShieldCheck, CheckCircle2, ChevronRight, X
+  Coins, Plus, Calendar, AlertTriangle, ShieldCheck, CheckCircle2, ChevronRight, X, Trash2
 } from 'lucide-react';
 
 export default function LoansPage() {
-  const { loans, addLoan, payLoanEmi } = useFinanceStore();
+  const { loans, addLoan, payLoanEmi, deleteLoan } = useFinanceStore();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [lenderName, setLenderName] = useState('mPokket');
@@ -70,12 +71,20 @@ export default function LoansPage() {
           <h1 className="font-display text-2xl md:text-4xl font-bold text-white tracking-tight">Loan Sentinel</h1>
           <p className="text-xs text-on-surface-variant font-mono uppercase mt-1">Active Debt Tracker</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="magnetic-btn px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider font-bold flex items-center gap-1.5"
-        >
-          <Plus className="w-4 h-4" /> Register Loan
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/calendar"
+            className="px-4 py-2.5 rounded-xl border border-white/10 hover:border-primary-fixed/30 text-[#b9caca] hover:text-primary-fixed font-mono text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all"
+          >
+            <Calendar className="w-4 h-4" /> Payment Calendar
+          </Link>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="magnetic-btn px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider font-bold flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Register Loan
+          </button>
+        </div>
       </div>
 
       {/* ACTIVE LOANS GRID (7 cols) */}
@@ -177,14 +186,23 @@ export default function LoansPage() {
                     <span className="font-display font-semibold text-secondary-fixed mt-0.5">₹{loan.remaining_balance}</span>
                   </div>
 
-                  {loan.status !== 'paid' && (
+                  <div className="flex items-center gap-2">
+                    {loan.status !== 'paid' && (
+                      <button
+                        onClick={() => payLoanEmi(loan.id, loan.emi_amount)}
+                        className="magnetic-btn px-4 py-2 rounded-xl text-xs font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all"
+                      >
+                        Pay EMI
+                      </button>
+                    )}
                     <button
-                      onClick={() => payLoanEmi(loan.id, loan.emi_amount)}
-                      className="magnetic-btn px-4 py-2 rounded-xl text-xs font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all"
+                      onClick={() => deleteLoan(loan.id)}
+                      title="Delete Loan"
+                      className="p-2 rounded-xl border border-white/5 hover:border-red-500/30 text-on-surface-variant hover:text-red-400 hover:bg-red-500/5 transition-all"
                     >
-                      Pay EMI
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             );

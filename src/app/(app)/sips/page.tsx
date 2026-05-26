@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
-  TrendingUp, Plus, Calculator, CalendarClock, ChevronRight, X, Percent, Compass
+  TrendingUp, Plus, Calculator, CalendarClock, ChevronRight, X, Percent, Compass, Calendar, Trash2
 } from 'lucide-react';
 
 export default function SipsPage() {
-  const { sips, addSip, updateSipValue } = useFinanceStore();
+  const { sips, addSip, updateSipValue, deleteSip } = useFinanceStore();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [fundName, setFundName] = useState('');
@@ -87,12 +88,20 @@ export default function SipsPage() {
           <h1 className="font-display text-2xl md:text-4xl font-bold text-white tracking-tight">SIP Vault</h1>
           <p className="text-xs text-on-surface-variant font-mono uppercase mt-1">Investment & Asset Telemetry</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="magnetic-btn px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider font-bold flex items-center gap-1.5"
-        >
-          <Plus className="w-4 h-4" /> Setup SIP
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/calendar"
+            className="px-4 py-2.5 rounded-xl border border-white/10 hover:border-primary-fixed/30 text-[#b9caca] hover:text-primary-fixed font-mono text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all"
+          >
+            <Calendar className="w-4 h-4" /> Payment Calendar
+          </Link>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="magnetic-btn px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider font-bold flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Setup SIP
+          </button>
+        </div>
       </div>
 
       {/* LEFT COLUMN: Active SIP cards (7 cols) */}
@@ -148,19 +157,30 @@ export default function SipsPage() {
                   </div>
                 )}
 
-                {/* Growth stats */}
-                <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-4">
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#849495]">Monthly SIP</span>
-                    <span className="font-display font-semibold text-white mt-0.5">₹{sip.monthly_amount}</span>
+                {/* Growth stats + delete */}
+                <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-[#849495]">Monthly SIP</span>
+                      <span className="font-display font-semibold text-white mt-0.5">₹{sip.monthly_amount}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-[#849495]">Total Invested</span>
+                      <span className="font-display font-semibold text-white mt-0.5">₹{sip.total_invested}</span>
+                    </div>
+                    <div className="flex flex-col text-right">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-[#849495]">Current Value</span>
+                      <span className="font-display font-semibold text-primary-fixed mt-0.5">₹{sip.current_value}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#849495]">Total Invested</span>
-                    <span className="font-display font-semibold text-white mt-0.5">₹{sip.total_invested}</span>
-                  </div>
-                  <div className="flex flex-col text-right">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#849495]">Current Value</span>
-                    <span className="font-display font-semibold text-primary-fixed mt-0.5">₹{sip.current_value}</span>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => deleteSip(sip.id)}
+                      title="Delete SIP"
+                      className="p-2 rounded-xl border border-white/5 hover:border-red-500/30 text-on-surface-variant hover:text-red-400 hover:bg-red-500/5 transition-all flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Remove SIP
+                    </button>
                   </div>
                 </div>
 

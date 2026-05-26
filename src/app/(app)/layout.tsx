@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useFinanceStore } from '@/store/useFinanceStore';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { 
   LayoutDashboard, History, Users, Map, Coins, 
   TrendingUp, PiggyBank, Target, CalendarClock, PieChart, 
@@ -25,10 +25,15 @@ export default function AppLayout({
   useEffect(() => {
     const loadStore = async () => {
       await init();
+      // If Supabase is configured but we have no logged-in user, redirect to login
+      if (isSupabaseConfigured && !useFinanceStore.getState().user) {
+        router.push('/login');
+        return;
+      }
       setLoading(false);
     };
     loadStore();
-  }, [init]);
+  }, [init, router]);
 
   const handleLogout = async () => {
     if (!isPreviewMode && supabase) {
@@ -65,11 +70,11 @@ export default function AppLayout({
   return (
     <div className="min-h-screen flex bg-black text-[#e5e2e1] font-sans relative">
       
-      {/* PREVIEW BANNER */}
-      {isPreviewMode && (
+      {/* PREVIEW BANNER — only show when Supabase is not configured */}
+      {isPreviewMode && !isSupabaseConfigured && (
         <div className="fixed top-0 left-0 w-full bg-yellow-500/10 border-b border-yellow-500/20 backdrop-blur-md z-[100] py-2 px-margin-mobile flex items-center justify-center gap-2 text-xs text-yellow-400 font-mono">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Preview Mode (Mock Data / Local Storage). Link your Supabase instance to enable full cloud sync.</span>
+          <span>Demo Mode — Configure your Supabase .env.local to enable full cloud sync.</span>
         </div>
       )}
 
@@ -238,7 +243,7 @@ export default function AppLayout({
             {/* User widget */}
             <Link href="/settings" className="flex items-center gap-3 hover:opacity-85 transition-opacity">
               <span className="text-xs font-mono uppercase tracking-wider text-[#b9caca]">
-                {user?.college || 'IIT Madras'}
+                {user?.college || user?.email?.split('@')[0] || 'CapitalS'}
               </span>
               <img 
                 src={user?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name}`} 

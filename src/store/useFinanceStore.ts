@@ -361,8 +361,10 @@ interface FinanceState {
   addTrip: (name: string, destination?: string, startDate?: string, endDate?: string, totalBudget?: number, participants?: string[]) => Promise<void>;
   addTripExpense: (tripId: string, amount: number, category: string, description: string, paidBy: string, splitBetween: string[]) => Promise<void>;
   addLoan: (lenderName: string, principal: number, interestRate: number, emiAmount: number, startDate: string, dueDate: string, loanType?: string) => Promise<void>;
+  deleteLoan: (loanId: string) => Promise<void>;
   payLoanEmi: (loanId: string, emiAmount: number) => Promise<void>;
   addSip: (fundName: string, monthlyAmount: number, startDate: string, nextPaymentDate: string, fundType?: string, linkedGoalId?: string) => Promise<void>;
+  deleteSip: (sipId: string) => Promise<void>;
   updateSipValue: (sipId: string, currentVal: number) => Promise<void>;
   addBudget: (category: string, limit: number, month: number, year: number, rollover?: boolean) => Promise<void>;
   addGoal: (name: string, targetAmount: number, deadline?: string, contribution?: number, category?: string, icon?: string) => Promise<void>;
@@ -472,83 +474,67 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           }
         }
       } catch (err) {
-        console.error("Failed to initialize Supabase, fallback to Mock Data", err);
+        console.error("Failed to initialize Supabase, fallback to empty state", err);
       }
     }
 
-    // FALLBACK: Load from Local Storage or load mock data
+    // No Supabase session — start with clean empty state (no mock data)
+    // Check localStorage for any previously saved real data
     const localData = localStorage.getItem('capitals_local_data_v1');
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        set({
-          isPreviewMode: true,
-          user: parsed.user || MOCK_USER,
-          incomes: parsed.incomes || [],
-          expenses: parsed.expenses || [],
-          trips: parsed.trips || [],
-          tripExpenses: parsed.tripExpenses || [],
-          loans: parsed.loans || [],
-          sips: parsed.sips || [],
-          budgets: parsed.budgets || [],
-          goals: parsed.goals || [],
-          reminders: parsed.reminders || [],
-          friends: parsed.friends || [],
-          sharedExpenses: parsed.sharedExpenses || [],
-          settlements: parsed.settlements || [],
-          subscriptions: parsed.subscriptions || [],
-          insights: parsed.insights || [],
-          savingsStreak: parsed.savingsStreak ?? 3,
-          noSpendDays: parsed.noSpendDays || [],
-        });
-        return;
+        // Only load if this was real user data (has a non-mock user id)
+        if (parsed.user && parsed.user.id && parsed.user.id !== 'user-mock-123') {
+          set({
+            isPreviewMode: false,
+            user: parsed.user,
+            incomes: parsed.incomes || [],
+            expenses: parsed.expenses || [],
+            trips: parsed.trips || [],
+            tripExpenses: parsed.tripExpenses || [],
+            loans: parsed.loans || [],
+            sips: parsed.sips || [],
+            budgets: parsed.budgets || [],
+            goals: parsed.goals || [],
+            reminders: parsed.reminders || [],
+            friends: parsed.friends || [],
+            sharedExpenses: parsed.sharedExpenses || [],
+            settlements: parsed.settlements || [],
+            subscriptions: parsed.subscriptions || [],
+            insights: parsed.insights || [],
+            savingsStreak: parsed.savingsStreak ?? 0,
+            noSpendDays: parsed.noSpendDays || [],
+          });
+          return;
+        }
       } catch (e) {
         console.error("Failed parsing local storage", e);
       }
     }
 
-    // If completely empty, seed mock data
+    // Completely fresh — clear any stale mock data and show empty state
+    localStorage.removeItem('capitals_local_data_v1');
     set({
       isPreviewMode: true,
-      user: MOCK_USER,
-      incomes: MOCK_INCOME,
-      expenses: MOCK_EXPENSES,
+      user: null,
+      incomes: [],
+      expenses: [],
       trips: [],
       tripExpenses: [],
-      loans: MOCK_LOANS,
-      sips: MOCK_SIPS,
-      budgets: MOCK_BUDGETS,
-      goals: MOCK_GOALS,
-      reminders: MOCK_REMINDERS,
-      friends: MOCK_FRIENDS,
-      sharedExpenses: MOCK_SHARED_EXPENSES,
+      loans: [],
+      sips: [],
+      budgets: [],
+      goals: [],
+      reminders: [],
+      friends: [],
+      sharedExpenses: [],
       settlements: [],
-      subscriptions: MOCK_SUBSCRIPTIONS,
-      insights: MOCK_INSIGHTS,
-      savingsStreak: 3,
-      noSpendDays: ['2026-05-21', '2026-05-22', '2026-05-23'],
+      subscriptions: [],
+      insights: [],
+      savingsStreak: 0,
+      noSpendDays: [],
     });
-    
-    // Save seeds
-    localStorage.setItem('capitals_local_data_v1', JSON.stringify({
-      user: MOCK_USER,
-      incomes: MOCK_INCOME,
-      expenses: MOCK_EXPENSES,
-      trips: [],
-      tripExpenses: [],
-      loans: MOCK_LOANS,
-      sips: MOCK_SIPS,
-      budgets: MOCK_BUDGETS,
-      goals: MOCK_GOALS,
-      reminders: MOCK_REMINDERS,
-      friends: MOCK_FRIENDS,
-      sharedExpenses: MOCK_SHARED_EXPENSES,
-      settlements: [],
-      subscriptions: MOCK_SUBSCRIPTIONS,
-      insights: MOCK_INSIGHTS,
-      savingsStreak: 3,
-      noSpendDays: ['2026-05-21', '2026-05-22', '2026-05-23']
-    }));
   },
 
   setUser: (user) => {
@@ -862,6 +848,22 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     } catch (_) { /* best-effort */ }
   },
 
+  deleteLoan: async (loanId) => {
+    const { isPreviewMode, loans, reminders } = get();
+    const updatedLoans = loans.filter(l => l.id !== loanId);
+    // Also remove any associated reminders
+    const updatedReminders = reminders.filter(r => !(r.type === 'loan' && r.title.includes(loans.find(l => l.id === loanId)?.lender_name || '__NONE__')));
+
+    if (!isPreviewMode && supabase) {
+      await supabase.from('loans').delete().eq('id', loanId);
+      await get().init();
+    } else {
+      set({ loans: updatedLoans, reminders: updatedReminders });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, loans: updatedLoans, reminders: updatedReminders }));
+    }
+  },
+
   payLoanEmi: async (loanId, emiAmount) => {
     const { isPreviewMode, loans } = get();
 
@@ -964,6 +966,22 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         false
       );
     } catch (_) { /* best-effort */ }
+  },
+
+  deleteSip: async (sipId) => {
+    const { isPreviewMode, sips, reminders } = get();
+    const sip = sips.find(s => s.id === sipId);
+    const updatedSips = sips.filter(s => s.id !== sipId);
+    const updatedReminders = reminders.filter(r => !(r.type === 'sip' && sip && r.title.includes(sip.fund_name)));
+
+    if (!isPreviewMode && supabase) {
+      await supabase.from('sips').delete().eq('id', sipId);
+      await get().init();
+    } else {
+      set({ sips: updatedSips, reminders: updatedReminders });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, sips: updatedSips, reminders: updatedReminders }));
+    }
   },
 
   updateSipValue: async (sipId, currentVal) => {
