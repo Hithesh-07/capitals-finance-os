@@ -79,16 +79,16 @@ export default function DashboardPage() {
   const totalInvested = sips.reduce((acc, curr) => acc + Number(curr.total_invested), 0);
   const outstandingLoans = loans.reduce((acc, curr) => acc + Number(curr.remaining_balance), 0);
 
-  // Safe to Spend = Inflow (Total In) - Outflow - Monthly Invested - Monthly EMIs
+  // Safe to Spend = (60% of Inflow) - Outflow - Monthly Invested (SIPs) - Monthly EMIs (Loans)
   const monthlyInvested = sips.reduce((acc, curr) => acc + Number(curr.monthly_amount), 0);
   const monthlyEmi = loans.reduce((acc, curr) => acc + Number(curr.emi_amount), 0);
-  const safeToSpend = Math.max(0, totalIn - totalOut - monthlyInvested - monthlyEmi);
+  const safeToSpend = Math.max(0, (0.60 * totalIn) - totalOut - monthlyInvested - monthlyEmi);
 
-  // Inflow Allocation Percentages (for visual advisor)
-  const expensePct = totalIn > 0 ? Math.min(100, (totalOut / totalIn) * 100) : 0;
-  const sipPct = totalIn > 0 ? Math.min(100 - expensePct, (monthlyInvested / totalIn) * 100) : 0;
-  const emiPct = totalIn > 0 ? Math.min(100 - expensePct - sipPct, (monthlyEmi / totalIn) * 100) : 0;
-  const safePct = totalIn > 0 ? Math.max(0, 100 - expensePct - sipPct - emiPct) : 0;
+  // Inflow Allocation Percentages (for visual advisor with 40% mandatory savings buffer)
+  const expensePct = totalIn > 0 ? Math.min(60, (totalOut / totalIn) * 100) : 0;
+  const sipPct = totalIn > 0 ? Math.min(60 - expensePct, (monthlyInvested / totalIn) * 100) : 0;
+  const emiPct = totalIn > 0 ? Math.min(60 - expensePct - sipPct, (monthlyEmi / totalIn) * 100) : 0;
+  const safePct = totalIn > 0 ? Math.max(0, 60 - expensePct - sipPct - emiPct) : 0;
 
   // Safety rating and suggestions
   let safetyGrade = 'N/A';
@@ -112,49 +112,49 @@ export default function DashboardPage() {
     const totalCommitted = monthlyEmi + monthlyInvested + totalOut;
     const committedRatio = totalCommitted / totalIn;
 
-    if (committedRatio > 0.9) {
-      safetyGrade = 'D- (Critical)';
+    if (committedRatio > 0.55) {
+      safetyGrade = 'D (Critical)';
       safetyColor = 'text-red-500';
       safetyBg = 'bg-red-500/10';
       safetyBorder = 'border-red-500/20';
-      safetyDescription = 'Overcommitted. More than 90% of your inflow is gone or spent.';
+      safetyDescription = 'Critical spending level. Committed expenses exceed your safe budget limits.';
       safetyTips = [
-        'Pause non-essential subscriptions or SIPs temporarily.',
-        'Avoid all "want" and "impulse" categories. Limit spending strictly to survival needs.',
-        'Consider finding supplementary income sources (gigs/freelance) to expand your inflow.'
+        'Your SIP investments, loan EMIs, and outflows consume more than 55% of your total inflow.',
+        'Avoid any non-essential discretionary purchases. Your Safe-to-Spend buffer is nearly exhausted.',
+        'Consider pausing non-essential subscriptions or generating extra inflow to restore your safe buffer.'
       ];
-    } else if (committedRatio > 0.7) {
+    } else if (committedRatio > 0.4) {
       safetyGrade = 'C (Caution)';
       safetyColor = 'text-amber-500';
       safetyBg = 'bg-amber-500/10';
       safetyBorder = 'border-amber-500/20';
-      safetyDescription = 'Tight budget. Over 70% of your inflow is consumed by fixed costs and spending.';
+      safetyDescription = 'Caution. Less than 20% of your total inflow remains safe to spend.';
       safetyTips = [
-        'Review your active subscriptions and cancel unused ones.',
-        'Adopt the 24-hour rule: wait 24 hours before buying anything in your "want" list.',
-        'Keep a small cash buffer in your ledger for emergency expenses.'
+        'You have saved/invested 40% as a mandatory buffer, but discretionary expenses are eating into the remaining 60%.',
+        'Review your recent expenditures to identify areas to cut back.',
+        'Defer major wants/impulse buys to next month.'
       ];
-    } else if (committedRatio > 0.4) {
+    } else if (committedRatio > 0.2) {
       safetyGrade = 'B (Balanced)';
       safetyColor = 'text-blue-400';
       safetyBg = 'bg-blue-400/10';
       safetyBorder = 'border-blue-400/20';
-      safetyDescription = 'Balanced. You have moderate breathing room, but keep an eye on discretionary outflow.';
+      safetyDescription = 'Healthy balance. Your safe budget has plenty of breathing room.';
       safetyTips = [
-        'Try to increase your savings rate. If you have extra cash, put it into a high-yield goal.',
-        'Set category budget limits (e.g., Food & Dining) to prevent creeping expenses.',
-        'Prioritize UPI payments only for pre-planned purchases.'
+        '40% of inflow is secured in your savings buffer. SIPs and EMIs are fully covered.',
+        'Keep tracking category budgets (like food/dining) to stay on target.',
+        'You are in a great position to spend responsibly within the emerald limit.'
       ];
     } else {
       safetyGrade = 'A+ (Excellent)';
       safetyColor = 'text-emerald-400';
       safetyBg = 'bg-emerald-400/10';
       safetyBorder = 'border-emerald-400/20';
-      safetyDescription = 'Excellent. Over 60% of your inflow is liquid and free to allocate.';
+      safetyDescription = 'Excellent. Over 40% of your total inflow is liquid and safe to spend.';
       safetyTips = [
-        'Establish or increase a recurring SIP to leverage compound growth early.',
-        'Allocate 10% of this safe cash into your emergency savings goal.',
-        'You are in a healthy position to afford minor splurges, but keep tracking!'
+        'You have preserved a major part of your 60% spending budget.',
+        'Consider setting up a new SIP or routing extra cash to a high-yield financial goal.',
+        'Keep maintaining your low-discretionary spend habits!'
       ];
     }
   }
@@ -309,7 +309,7 @@ export default function DashboardPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Inflow Allocation Breakdown
             </h3>
             <p className="text-xs text-on-surface-variant mt-1">
-              Visualizing how your total inflow of <span className="text-white font-medium">₹{totalIn.toLocaleString('en-IN')}</span> is distributed.
+              Visualizing how your total inflow of <span className="text-white font-medium">₹{totalIn.toLocaleString('en-IN')}</span> is distributed (with 40% kept for Savings).
             </p>
           </div>
 
@@ -317,6 +317,7 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-6">
               {/* Stacked Progress Bar */}
               <div className="w-full h-4 rounded-full bg-white/5 overflow-hidden flex border border-white/10">
+                <div className="h-full bg-emerald-600/30 border-r border-emerald-500/20" style={{ width: '40%' }} title="Mandatory Savings Buffer: 40%" />
                 {expensePct > 0 && <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${expensePct}%` }} title={`Outflow: ${expensePct.toFixed(1)}%`} />}
                 {sipPct > 0 && <div className="h-full bg-blue-400 transition-all duration-300" style={{ width: `${sipPct}%` }} title={`SIPs: ${sipPct.toFixed(1)}%`} />}
                 {emiPct > 0 && <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${emiPct}%` }} title={`EMIs: ${emiPct.toFixed(1)}%`} />}
@@ -324,30 +325,37 @@ export default function DashboardPage() {
               </div>
 
               {/* Legend with stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-red-500 shrink-0"></div>
+                  <div className="w-3.5 h-3.5 rounded bg-emerald-600/30 border border-emerald-500/30 shrink-0"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Savings Buffer (40%)</span>
+                    <span className="text-xs text-white font-bold">₹{(totalIn * 0.4).toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">(40%)</span></span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3.5 h-3.5 rounded bg-red-500 shrink-0"></div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Outflow</span>
                     <span className="text-xs text-white font-bold">₹{totalOut.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({expensePct.toFixed(0)}%)</span></span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-blue-400 shrink-0"></div>
+                  <div className="w-3.5 h-3.5 rounded bg-blue-400 shrink-0"></div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">SIP Investments</span>
                     <span className="text-xs text-white font-bold">₹{monthlyInvested.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({sipPct.toFixed(0)}%)</span></span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-purple-500 shrink-0"></div>
+                  <div className="w-3.5 h-3.5 rounded bg-purple-500 shrink-0"></div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Loan EMIs</span>
                     <span className="text-xs text-white font-bold">₹{monthlyEmi.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({emiPct.toFixed(0)}%)</span></span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded bg-emerald-400 shrink-0"></div>
+                  <div className="w-3.5 h-3.5 rounded bg-emerald-400 shrink-0"></div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Safe to Spend</span>
                     <span className="text-xs text-white font-bold">₹{safeToSpend.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({safePct.toFixed(0)}%)</span></span>
