@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
-  CalendarClock, Plus, Bell, AlertTriangle, ShieldCheck, X, Hourglass 
+  CalendarClock, Plus, Bell, AlertTriangle, ShieldCheck, X, Hourglass, Trash2
 } from 'lucide-react';
 
 export default function RemindersPage() {
-  const { reminders, addReminder, markReminderPaid, isPreviewMode } = useFinanceStore();
+  const { reminders, addReminder, markReminderPaid, deleteReminder, isPreviewMode } = useFinanceStore();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [title, setTitle] = useState('');
@@ -122,7 +122,7 @@ export default function RemindersPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                 <div className="flex items-center gap-2 self-end sm:self-center">
                   {isPaid ? (
                     <span className="px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 rounded-lg border border-tertiary-fixed/25">
                       Settled
@@ -143,6 +143,17 @@ export default function RemindersPage() {
                       </button>
                     </>
                   )}
+                  <button
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to delete this reminder? This cannot be undone.")) {
+                        await deleteReminder(rem.id);
+                      }
+                    }}
+                    className="p-1.5 rounded-lg border border-red-500/20 hover:bg-red-500/10 text-red-400 active:scale-95 transition-all"
+                    title="Delete Reminder"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             );

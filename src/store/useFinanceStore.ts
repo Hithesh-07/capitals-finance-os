@@ -263,6 +263,7 @@ interface FinanceState {
   contributeToGoal: (goalId: string, amount: number) => Promise<void>;
   addReminder: (title: string, amount: number | undefined, dueDate: string, type: Reminder['type'], reminderTime?: string, autopay?: boolean) => Promise<void>;
   markReminderPaid: (reminderId: string) => Promise<void>;
+  deleteReminder: (reminderId: string) => Promise<void>;
   addFriend: (name: string, phone?: string, upiId?: string) => Promise<void>;
   deleteFriend: (friendId: string) => Promise<void>;
   addSharedExpense: (paidBy: string, amount: number, description: string, splitBetween: string[], tripId?: string) => Promise<void>;
@@ -1376,6 +1377,20 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
     if (!isPreviewMode && supabase) {
       await supabase.from('reminders').update({ status: 'paid' }).eq('id', reminderId);
+      await get().init();
+    } else {
+      set({ reminders: updated });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, reminders: updated }));
+    }
+  },
+
+  deleteReminder: async (reminderId) => {
+    const { isPreviewMode, reminders } = get();
+    const updated = reminders.filter(r => r.id !== reminderId);
+
+    if (!isPreviewMode && supabase) {
+      await supabase.from('reminders').delete().eq('id', reminderId);
       await get().init();
     } else {
       set({ reminders: updated });

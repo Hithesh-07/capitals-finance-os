@@ -8,7 +8,7 @@ import {
 
 export default function CalendarPage() {
   const { 
-    reminders, markReminderPaid, 
+    reminders, markReminderPaid, deleteReminder,
     loans, sips, deleteLoan, deleteSip, payLoanEmi 
   } = useFinanceStore();
   
@@ -245,18 +245,31 @@ export default function CalendarPage() {
                     {/* Right action buttons */}
                     <div className="flex gap-2 items-center">
                       {evt.type === 'reminder' && (
-                        evt.status === 'paid' ? (
-                          <span className="text-[9px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 px-2.5 py-1 rounded-lg border border-tertiary-fixed/20">
-                            Cleared
-                          </span>
-                        ) : (
+                        <>
+                          {evt.status === 'paid' ? (
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 px-2.5 py-1 rounded-lg border border-tertiary-fixed/20">
+                              Cleared
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => markReminderPaid(evt.id)}
+                              className="magnetic-btn px-3 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all"
+                            >
+                              Clear Bill
+                            </button>
+                          )}
                           <button
-                            onClick={() => markReminderPaid(evt.id)}
-                            className="magnetic-btn px-3 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all"
+                            onClick={async () => {
+                              if (confirm("Are you sure you want to delete this reminder? This cannot be undone.")) {
+                                await deleteReminder(evt.id);
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-lg border border-red-500/20 hover:bg-red-500/10 text-red-400 text-[9px] font-mono uppercase tracking-wider active:scale-95 transition-all flex items-center gap-1"
+                            title="Delete Reminder"
                           >
-                            Clear Bill
+                            <Trash2 className="w-3 h-3" /> Delete
                           </button>
-                        )
+                        </>
                       )}
 
                       {evt.type === 'loan' && (
