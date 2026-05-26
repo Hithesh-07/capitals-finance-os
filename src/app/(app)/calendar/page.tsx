@@ -3,11 +3,15 @@
 import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
-  Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, AlertTriangle, Check
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, AlertTriangle, Check, Trash2, CreditCard
 } from 'lucide-react';
 
 export default function CalendarPage() {
-  const { reminders, markReminderPaid } = useFinanceStore();
+  const { 
+    reminders, markReminderPaid, 
+    loans, sips, deleteLoan, deleteSip, payLoanEmi 
+  } = useFinanceStore();
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(
     new Date().toISOString().split('T')[0]
@@ -46,12 +50,49 @@ export default function CalendarPage() {
     return date.toISOString().split('T')[0];
   };
 
-  // Check if date has reminders
-  const getRemindersForDate = (dateStr: string) => {
-    return reminders.filter(r => r.due_date === dateStr);
+  // Check if date has events (reminders, loans, sips)
+  const getEventsForDate = (dateStr: string) => {
+    const list: any[] = [];
+    
+    // Reminders
+    reminders.filter(r => r.due_date === dateStr).forEach(r => {
+      list.push({
+        id: r.id,
+        type: 'reminder',
+        title: r.title,
+        amount: r.amount,
+        status: r.status,
+        subType: r.type,
+      });
+    });
+
+    // Loans
+    loans.filter(l => l.due_date === dateStr).forEach(l => {
+      list.push({
+        id: l.id,
+        type: 'loan',
+        title: `${l.lender_name} Loan EMI`,
+        amount: l.emi_amount,
+        status: l.status === 'paid' ? 'paid' : 'pending',
+        remaining_balance: l.remaining_balance,
+      });
+    });
+
+    // Sips
+    sips.filter(s => s.next_payment_date === dateStr).forEach(s => {
+      list.push({
+        id: s.id,
+        type: 'sip',
+        title: `${s.fund_name} SIP`,
+        amount: s.monthly_amount,
+        status: s.status === 'active' ? 'pending' : 'paused',
+      });
+    });
+
+    return list;
   };
 
-  const selectedDateReminders = selectedDateStr ? getRemindersForDate(selectedDateStr) : [];
+  const selectedDateEvents = selectedDateStr ? getEventsForDate(selectedDateStr) : [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full max-w-container-max mx-auto pb-12">
@@ -107,8 +148,8 @@ export default function CalendarPage() {
               }
 
               const dateStr = getFormattedKey(dateObj);
-              const dayReminders = getRemindersForDate(dateStr);
-              const hasReminders = dayReminders.length > 0;
+              const dayEvents = getEventsForDate(dateStr);
+              const hasEvents = dayEvents.length > 0;
               const isSelected = selectedDateStr === dateStr;
               
               const isToday = new Date().toISOString().split('T')[0] === dateStr;
@@ -129,13 +170,13 @@ export default function CalendarPage() {
                   <span className="font-mono text-xs">{dateObj.getDate()}</span>
                   
                   {/* Marker dots */}
-                  {hasReminders && (
+                  {hasEvents && (
                     <div className="flex gap-1 justify-center w-full">
-                      {dayReminders.slice(0, 3).map(rem => (
+                      {dayEvents.slice(0, 3).map((evt, eIdx) => (
                         <div 
-                          key={rem.id} 
+                          key={`${evt.type}-${evt.id}-${eIdx}`} 
                           className={`w-1 h-1 rounded-full ${
-                            rem.status === 'paid' ? 'bg-tertiary-fixed' : 'bg-primary-fixed shadow-[0_0_4px_#63f7ff]'
+                            evt.status === 'paid' ? 'bg-tertiary-fixed' : 'bg-primary-fixed shadow-[0_0_4px_#63f7ff]'
                           }`} 
                         />
                       ))}
@@ -164,45 +205,104 @@ export default function CalendarPage() {
             <span className="font-mono text-[9px] uppercase text-[#849495] mt-0.5">Dues Scheduled</span>
           </div>
 
-          {/* Reminders List for Selected Date */}
+          {/* Events List for Selected Date */}
           <div className="flex flex-col gap-3">
-            {selectedDateReminders.length === 0 ? (
+            {selectedDateEvents.length === 0 ? (
               <p className="text-xs text-on-surface-variant font-mono uppercase tracking-wider py-8 text-center">
                 No alerts scheduled for this date.
               </p>
             ) : (
-              selectedDateReminders.map(rem => (
+              selectedDateEvents.map(evt => (
                 <div 
-                  key={rem.id} 
+                  key={`${evt.type}-${evt.id}`} 
                   className={`p-4 rounded-xl bg-white/2 border border-white/5 flex flex-col gap-3 border-l-4 ${
-                    rem.status === 'paid' ? 'border-l-tertiary-fixed' : 'border-l-primary-fixed'
+                    evt.status === 'paid' ? 'border-l-tertiary-fixed' : 'border-l-primary-fixed'
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-white">{rem.title}</span>
-                      <span className="text-[9px] text-[#849495] font-mono mt-0.5 uppercase">{rem.type}</span>
+                      <span className="text-xs font-semibold text-white">{evt.title}</span>
+                      <span className="text-[9px] text-[#849495] font-mono mt-0.5 uppercase">{evt.type}</span>
                     </div>
-                    {rem.amount && (
+                    {evt.amount && (
                       <span className="font-mono font-bold text-xs text-white">
-                        ₹{rem.amount}
+                        ₹{evt.amount}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex justify-end gap-2">
-                    {rem.status === 'paid' ? (
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 px-2.5 py-1.5 rounded-lg border border-tertiary-fixed/20">
-                        Cleared
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => markReminderPaid(rem.id)}
-                        className="magnetic-btn px-4 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all"
-                      >
-                        Clear Bill
-                      </button>
-                    )}
+                  <div className="flex justify-between items-center mt-1 pt-2 border-t border-white/5">
+                    {/* Left info if any */}
+                    <div className="text-[10px] text-[#849495] font-mono">
+                      {evt.type === 'loan' && evt.remaining_balance !== undefined && (
+                        <span>Bal: ₹{evt.remaining_balance}</span>
+                      )}
+                    </div>
+
+                    {/* Right action buttons */}
+                    <div className="flex gap-2 items-center">
+                      {evt.type === 'reminder' && (
+                        evt.status === 'paid' ? (
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 px-2.5 py-1 rounded-lg border border-tertiary-fixed/20">
+                            Cleared
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => markReminderPaid(evt.id)}
+                            className="magnetic-btn px-3 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all"
+                          >
+                            Clear Bill
+                          </button>
+                        )
+                      )}
+
+                      {evt.type === 'loan' && (
+                        <>
+                          {evt.status === 'paid' ? (
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 px-2.5 py-1 rounded-lg border border-tertiary-fixed/20">
+                              Paid
+                            </span>
+                          ) : (
+                            <button
+                              onClick={async () => {
+                                const emi = prompt(`Enter EMI payment amount (default ₹${evt.amount}):`, String(evt.amount));
+                                if (emi && !isNaN(Number(emi))) {
+                                  await payLoanEmi(evt.id, Number(emi));
+                                }
+                              }}
+                              className="magnetic-btn px-3 py-1 rounded-lg text-[9px] font-mono uppercase tracking-wider font-semibold active:scale-95 transition-all flex items-center gap-1"
+                            >
+                              <CreditCard className="w-3 h-3" /> Pay EMI
+                            </button>
+                          )}
+                          <button
+                            onClick={async () => {
+                              if (confirm("Are you sure you want to delete this loan? This cannot be undone.")) {
+                                await deleteLoan(evt.id);
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-lg border border-red-500/20 hover:bg-red-500/10 text-red-400 text-[9px] font-mono uppercase tracking-wider active:scale-95 transition-all flex items-center gap-1"
+                            title="Delete Loan"
+                          >
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </button>
+                        </>
+                      )}
+
+                      {evt.type === 'sip' && (
+                        <button
+                          onClick={async () => {
+                            if (confirm("Are you sure you want to delete this SIP? This cannot be undone.")) {
+                              await deleteSip(evt.id);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg border border-red-500/20 hover:bg-red-500/10 text-red-400 text-[9px] font-mono uppercase tracking-wider active:scale-95 transition-all flex items-center gap-1"
+                          title="Delete SIP"
+                        >
+                          <Trash2 className="w-3 h-3" /> Delete SIP
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))

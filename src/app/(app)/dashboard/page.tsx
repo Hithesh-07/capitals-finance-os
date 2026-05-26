@@ -332,7 +332,7 @@ export default function DashboardPage() {
             <span className="font-mono text-2xl font-semibold text-secondary-fixed mt-2 tracking-tight">{loanCountdown}</span>
           </div>
           <span className="text-[10px] text-on-surface-variant font-mono mt-4">
-            mPokket loan balance: ₹{outstandingLoans}
+            {loans.find(l => l.status === 'active')?.lender_name || 'Active'} loan balance: ₹{outstandingLoans}
           </span>
         </div>
 
@@ -347,7 +347,7 @@ export default function DashboardPage() {
             <span className="font-mono text-2xl font-semibold text-primary-fixed mt-2 tracking-tight">{sipCountdown}</span>
           </div>
           <span className="text-[10px] text-on-surface-variant font-mono mt-4">
-            SIP destination: Quant Small Cap
+            SIP destination: {sips.find(s => s.status === 'active')?.fund_name.split(' ')[0] || 'Mutual Funds'}
           </span>
         </div>
 

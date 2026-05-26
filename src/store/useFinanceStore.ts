@@ -216,117 +216,6 @@ export interface AiInsight {
 }
 
 // ====================================================
-// INITIAL MOCK DATA (INDIAN STUDENTS)
-// ====================================================
-
-const MOCK_USER: UserProfile = {
-  id: 'user-mock-123',
-  name: 'Hithesh Reddy',
-  email: 'hithesh@iitm.ac.in',
-  college: 'IIT Madras',
-  city: 'Chennai',
-  student_type: 'undergraduate',
-  currency: 'INR',
-  monthly_allowance: 12000,
-  main_income_source: 'parents',
-  has_loan: true,
-  has_sip: true,
-  financial_goal: 'Buy OnePlus 13',
-  preferred_reminder_time: '20:00',
-  avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Hithesh',
-  created_at: new Date().toISOString(),
-};
-
-const MOCK_INCOME: Income[] = [
-  { id: 'inc-1', user_id: 'user-mock-123', amount: 10000, source: 'parent_allowance', date: '2026-05-01', note: 'Monthly allowance from Mom', payment_mode: 'UPI' },
-  { id: 'inc-2', user_id: 'user-mock-123', amount: 4500, source: 'freelancing', date: '2026-05-15', note: 'Web dev contract payout', payment_mode: 'UPI', client_name: 'Dosa Hut website' },
-  { id: 'inc-3', user_id: 'user-mock-123', amount: 1500, source: 'gift', date: '2026-05-20', note: 'Birthday money from Uncle', payment_mode: 'UPI' }
-];
-
-const MOCK_EXPENSES: Expense[] = [
-  { id: 'exp-1', user_id: 'user-mock-123', amount: 350, category: 'Food & Dining', subcategory: 'Dinner', date: '2026-05-24', note: 'Swiggy Biryani', payment_mode: 'UPI', venue_name: 'Swiggy', tag: 'want' },
-  { id: 'exp-2', user_id: 'user-mock-123', amount: 150, category: 'Travel', subcategory: 'Metro', date: '2026-05-25', note: 'Chennai Metro smartcard', payment_mode: 'UPI', venue_name: 'CMRL', tag: 'need' },
-  { id: 'exp-3', user_id: 'user-mock-123', amount: 649, category: 'Subscriptions', subcategory: 'Entertainment', date: '2026-05-05', note: 'Netflix premium split', payment_mode: 'UPI', venue_name: 'Netflix', tag: 'want' },
-  { id: 'exp-4', user_id: 'user-mock-123', amount: 1999, category: 'Shopping', subcategory: 'Apparel', date: '2026-05-18', note: 'Hoodie from H&M', payment_mode: 'UPI', venue_name: 'H&M Express', tag: 'impulse' },
-  { id: 'exp-5', user_id: 'user-mock-123', amount: 1500, category: 'Investments', subcategory: 'Mutual Fund', date: '2026-05-10', note: 'Groww SIP auto-debit', payment_mode: 'UPI', venue_name: 'Quant Small Cap', tag: 'need' },
-  { id: 'exp-6', user_id: 'user-mock-123', amount: 1050, category: 'Loans & EMI', subcategory: 'EMI', date: '2026-05-07', note: 'mPokket due paid', payment_mode: 'UPI', venue_name: 'mPokket', tag: 'need' },
-  { id: 'exp-7', user_id: 'user-mock-123', amount: 150, category: 'Food & Dining', subcategory: 'Snacks', date: '2026-05-25', note: 'Maggie and Tea at Nescafe', payment_mode: 'Cash', venue_name: 'Nescafe IITM', tag: 'need' }
-];
-
-const MOCK_LOANS: Loan[] = [
-  {
-    id: 'loan-1',
-    user_id: 'user-mock-123',
-    lender_name: 'mPokket',
-    loan_type: 'app',
-    principal: 4000,
-    interest_rate: 24,
-    emi_amount: 1050,
-    start_date: '2026-04-10',
-    due_date: '2026-06-10',
-    total_paid: 2100,
-    remaining_balance: 1900,
-    status: 'active',
-    notes: 'Short term cash loan for college semester exam fees'
-  }
-];
-
-const MOCK_SIPS: Sip[] = [
-  {
-    id: 'sip-1',
-    user_id: 'user-mock-123',
-    fund_name: 'Quant Small Cap Mutual Fund',
-    fund_type: 'mutual_fund',
-    monthly_amount: 1500,
-    start_date: '2026-01-10',
-    next_payment_date: '2026-06-10',
-    total_invested: 7500,
-    current_value: 8450,
-    reminder_days_before: 3,
-    status: 'active'
-  }
-];
-
-const MOCK_BUDGETS: Budget[] = [
-  { id: 'bud-1', user_id: 'user-mock-123', category: 'Food & Dining', monthly_limit: 4500, spent: 2150, month: 5, year: 2026, rollover_enabled: true },
-  { id: 'bud-2', user_id: 'user-mock-123', category: 'Travel', monthly_limit: 1500, spent: 650, month: 5, year: 2026, rollover_enabled: false },
-  { id: 'bud-3', user_id: 'user-mock-123', category: 'Shopping', monthly_limit: 3000, spent: 2200, month: 5, year: 2026, rollover_enabled: false },
-  { id: 'bud-4', user_id: 'user-mock-123', category: 'Subscriptions', monthly_limit: 1000, spent: 649, month: 5, year: 2026, rollover_enabled: false }
-];
-
-const MOCK_GOALS: Goal[] = [
-  { id: 'goal-1', user_id: 'user-mock-123', name: 'OnePlus 13', target_amount: 60000, saved_amount: 18000, deadline: '2026-10-31', monthly_contribution: 6000, category: 'Gadgets', status: 'in_progress', icon: 'smartphone' },
-  { id: 'goal-2', user_id: 'user-mock-123', name: 'Goa Trip with hostel mates', target_amount: 10000, saved_amount: 4500, deadline: '2026-08-15', monthly_contribution: 2000, category: 'Travel', status: 'in_progress', icon: 'flight_takeoff' }
-];
-
-const MOCK_REMINDERS: Reminder[] = [
-  { id: 'rem-1', user_id: 'user-mock-123', title: 'mPokket Loan EMI Due', amount: 1050, due_date: '2026-06-10', type: 'loan', status: 'pending', reminder_time: '10:00:00' },
-  { id: 'rem-2', user_id: 'user-mock-123', title: 'Quant Small Cap SIP', amount: 1500, due_date: '2026-06-10', type: 'sip', status: 'pending', reminder_time: '09:00:00' },
-  { id: 'rem-3', user_id: 'user-mock-123', title: 'Netflix Premium AutoPay', amount: 216, due_date: '2026-06-05', type: 'subscription', status: 'pending', reminder_time: '12:00:00' }
-];
-
-const MOCK_FRIENDS: Friend[] = [
-  { id: 'fr-1', user_id: 'user-mock-123', friend_name: 'Amit Sharma', phone: '9876543210', upi_id: 'amit@okhdfc' },
-  { id: 'fr-2', user_id: 'user-mock-123', friend_name: 'Sneha Patel', phone: '9876543211', upi_id: 'sneha@okaxis' },
-  { id: 'fr-3', user_id: 'user-mock-123', friend_name: 'Rahul Verma', phone: '9876543212', upi_id: 'rahul@okicici' }
-];
-
-const MOCK_SHARED_EXPENSES: SharedExpense[] = [
-  { id: 'se-1', user_id: 'user-mock-123', paid_by: 'You', amount: 1200, description: 'Group Dinner at Cafe Bilbo', split_between: ['You', 'Amit Sharma', 'Sneha Patel', 'Rahul Verma'], date: '2026-05-24', settled: false }
-];
-
-const MOCK_SUBSCRIPTIONS: Subscription[] = [
-  { id: 'sub-1', user_id: 'user-mock-123', name: 'Netflix Premium', amount: 649, renewal_date: '2026-06-05', frequency: 'monthly', category: 'Entertainment', shared_with: ['Amit Sharma', 'Sneha Patel'], split_ratio: [0.33, 0.33, 0.34], status: 'active' },
-  { id: 'sub-2', user_id: 'user-mock-123', name: 'Spotify Premium', amount: 129, renewal_date: '2026-06-08', frequency: 'monthly', category: 'Music', status: 'active' }
-];
-
-const MOCK_INSIGHTS: AiInsight[] = [
-  { id: 'ai-1', user_id: 'user-mock-123', message: 'You spent ₹2,200 on Shopping this month, which is 73% of your shopping limit. Proceed with caution to avoid early balance exhaustion.', type: 'warning', dismissed: false },
-  { id: 'ai-2', user_id: 'user-mock-123', message: 'Impulse guard status: ₹1,999 of your spending was flagged as an Impulse buy (H&M Hoodie). We recommend locking impulse spending for the next 5 days.', type: 'safety', dismissed: false },
-  { id: 'ai-3', user_id: 'user-mock-123', message: 'Streak alert! 3 days without an impulse purchase. Keep it going to earn the frugality badge!', type: 'achievement', dismissed: false }
-];
-
-// ====================================================
 // STORE STATE INTERFACE
 // ====================================================
 
@@ -423,71 +312,93 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           const userId = session.user.id;
           
           // 1. Fetch user profile
-          const { data: userProfile } = await supabase!
+          let { data: userProfile } = await supabase!
             .from('users')
             .select('*')
             .eq('id', userId)
             .single();
 
-          if (userProfile) {
-            // 2. Fetch user data tables
-            const [
-              incRes, expRes, tripRes, tripExpRes, loanRes,
-              sipRes, budRes, goalRes, remRes, friendRes,
-              sharedRes, settRes, subRes, insRes
-            ] = await Promise.all([
-              supabase!.from('income').select('*').eq('user_id', userId),
-              supabase!.from('expenses').select('*').eq('user_id', userId),
-              supabase!.from('trips').select('*').eq('user_id', userId),
-              supabase!.from('trip_expenses').select('*').eq('user_id', userId),
-              supabase!.from('loans').select('*').eq('user_id', userId),
-              supabase!.from('sips').select('*').eq('user_id', userId),
-              supabase!.from('budgets').select('*').eq('user_id', userId),
-              supabase!.from('goals').select('*').eq('user_id', userId),
-              supabase!.from('reminders').select('*').eq('user_id', userId),
-              supabase!.from('friends').select('*').eq('user_id', userId),
-              supabase!.from('shared_expenses').select('*').eq('user_id', userId),
-              supabase!.from('settlements').select('*, shared_expenses!inner(user_id)').eq('shared_expenses.user_id', userId),
-              supabase!.from('subscriptions').select('*').eq('user_id', userId),
-              supabase!.from('ai_insights').select('*').eq('user_id', userId).eq('dismissed', false),
-            ]);
-
-            set({
-              isPreviewMode: false,
-              user: userProfile,
-              incomes: incRes.data || [],
-              expenses: expRes.data || [],
-              trips: tripRes.data || [],
-              tripExpenses: tripExpRes.data || [],
-              loans: loanRes.data || [],
-              sips: sipRes.data || [],
-              budgets: budRes.data || [],
-              goals: goalRes.data || [],
-              reminders: remRes.data || [],
-              friends: friendRes.data || [],
-              sharedExpenses: sharedRes.data || [],
-              settlements: settRes.data || [],
-              subscriptions: subRes.data || [],
-              insights: insRes.data || [],
-            });
-            return;
+          if (!userProfile) {
+            // Profile doesn't exist in public.users yet (e.g. signup trigger was delayed or manual onboarding)
+            // Auto-create/upsert the profile row so the user isn't orphaned
+            const newProfile = {
+              id: userId,
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Student User',
+              email: session.user.email || '',
+              currency: 'INR',
+              monthly_allowance: 10000,
+              student_type: 'undergraduate',
+              main_income_source: 'parents'
+            };
+            const { data: insertedProfile, error: insertError } = await supabase!
+              .from('users')
+              .upsert(newProfile)
+              .select('*')
+              .single();
+            
+            if (!insertError && insertedProfile) {
+              userProfile = insertedProfile;
+            } else {
+              console.error("Failed to auto-create user profile", insertError);
+              userProfile = newProfile;
+            }
           }
+
+          // 2. Fetch user data tables
+          const [
+            incRes, expRes, tripRes, tripExpRes, loanRes,
+            sipRes, budRes, goalRes, remRes, friendRes,
+            sharedRes, settRes, subRes, insRes
+          ] = await Promise.all([
+            supabase!.from('income').select('*').eq('user_id', userId),
+            supabase!.from('expenses').select('*').eq('user_id', userId),
+            supabase!.from('trips').select('*').eq('user_id', userId),
+            supabase!.from('trip_expenses').select('*').eq('user_id', userId),
+            supabase!.from('loans').select('*').eq('user_id', userId),
+            supabase!.from('sips').select('*').eq('user_id', userId),
+            supabase!.from('budgets').select('*').eq('user_id', userId),
+            supabase!.from('goals').select('*').eq('user_id', userId),
+            supabase!.from('reminders').select('*').eq('user_id', userId),
+            supabase!.from('friends').select('*').eq('user_id', userId),
+            supabase!.from('shared_expenses').select('*').eq('user_id', userId),
+            supabase!.from('settlements').select('*, shared_expenses!inner(user_id)').eq('shared_expenses.user_id', userId),
+            supabase!.from('subscriptions').select('*').eq('user_id', userId),
+            supabase!.from('ai_insights').select('*').eq('user_id', userId).eq('dismissed', false),
+          ]);
+
+          set({
+            isPreviewMode: false,
+            user: userProfile,
+            incomes: incRes.data || [],
+            expenses: expRes.data || [],
+            trips: tripRes.data || [],
+            tripExpenses: tripExpRes.data || [],
+            loans: loanRes.data || [],
+            sips: sipRes.data || [],
+            budgets: budRes.data || [],
+            goals: goalRes.data || [],
+            reminders: remRes.data || [],
+            friends: friendRes.data || [],
+            sharedExpenses: sharedRes.data || [],
+            settlements: settRes.data || [],
+            subscriptions: subRes.data || [],
+            insights: insRes.data || [],
+          });
+          return;
         }
       } catch (err) {
         console.error("Failed to initialize Supabase, fallback to empty state", err);
       }
     }
 
-    // No Supabase session — start with clean empty state (no mock data)
-    // Check localStorage for any previously saved real data
+    // No Supabase session — start with clean empty state (or load from localStorage if mock/local mode)
     const localData = localStorage.getItem('capitals_local_data_v1');
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        // Only load if this was real user data (has a non-mock user id)
-        if (parsed.user && parsed.user.id && parsed.user.id !== 'user-mock-123') {
+        if (parsed.user && parsed.user.id) {
           set({
-            isPreviewMode: false,
+            isPreviewMode: !isSupabaseConfigured || parsed.user.id === 'user-mock-123',
             user: parsed.user,
             incomes: parsed.incomes || [],
             expenses: parsed.expenses || [],
@@ -513,7 +424,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
     }
 
-    // Completely fresh — clear any stale mock data and show empty state
+    // Completely fresh empty state
     localStorage.removeItem('capitals_local_data_v1');
     set({
       isPreviewMode: true,
@@ -550,8 +461,14 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   // ====================================================
   addIncome: async (amount, source, note, paymentMode, isRecurring, frequency, clientName, expectedPayoutDate, date) => {
     const { user, isPreviewMode, incomes } = get();
-    const currentUserId = user?.id || 'user-mock-123';
     const incomeDate = date || new Date().toISOString().split('T')[0];
+
+    // Always get userId from the live auth session so it matches RLS auth.uid()
+    let currentUserId = user?.id || 'user-mock-123';
+    if (!isPreviewMode && supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) currentUserId = session.user.id;
+    }
 
     const newIncome: Income = {
       id: `inc-${Math.random().toString(36).substr(2, 9)}`,
@@ -597,8 +514,14 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   // ====================================================
   addExpense: async (amount, category, subcategory, note, paymentMode, venueName, tag, tripId, linkedLoanId, date) => {
     const { user, isPreviewMode, expenses, budgets, noSpendDays, savingsStreak } = get();
-    const currentUserId = user?.id || 'user-mock-123';
     const expenseDate = date || new Date().toISOString().split('T')[0];
+
+    // Always get userId from the live auth session so it matches RLS auth.uid()
+    let currentUserId = user?.id || 'user-mock-123';
+    if (!isPreviewMode && supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) currentUserId = session.user.id;
+    }
 
     const newExpense: Expense = {
       id: `exp-${Math.random().toString(36).substr(2, 9)}`,
