@@ -30,6 +30,7 @@ export default function TransactionsPage() {
   const [paymentMode, setPaymentMode] = useState('UPI');
   const [venueName, setVenueName] = useState('');
   const [tag, setTag] = useState<'need' | 'want' | 'impulse'>('need');
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Receipt Scanner states
   const [isScanning, setIsScanning] = useState(false);
@@ -68,6 +69,7 @@ export default function TransactionsPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     if (!amount || Number(amount) <= 0) return;
 
     try {
@@ -91,7 +93,9 @@ export default function TransactionsPage() {
           paymentMode,
           false,
           undefined,
-          venueName || undefined
+          venueName || undefined,
+          undefined,
+          date  // pass the selected date
         );
       }
 
@@ -103,8 +107,9 @@ export default function TransactionsPage() {
       setScannedResult(null);
       setSelectedFile(null);
       setPreviewUrl(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setSubmitError(err?.message || 'Failed to save transaction. Please try again.');
     }
   };
 
@@ -524,6 +529,12 @@ export default function TransactionsPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                   />
                 </div>
+
+                {submitError && (
+                  <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-xs text-red-400 font-mono">
+                    ⚠ {submitError}
+                  </div>
+                )}
 
                 <button
                   type="submit"

@@ -355,8 +355,8 @@ interface FinanceState {
   setUser: (user: UserProfile | null) => void;
   
   // Mutations
-  addIncome: (amount: number, source: string, note?: string, paymentMode?: string, isRecurring?: boolean, frequency?: string, clientName?: string, expectedPayoutDate?: string) => Promise<void>;
-  addExpense: (amount: number, category: string, subcategory?: string, note?: string, paymentMode?: string, venueName?: string, tag?: 'need' | 'want' | 'impulse', tripId?: string, linkedLoanId?: string) => Promise<void>;
+  addIncome: (amount: number, source: string, note?: string, paymentMode?: string, isRecurring?: boolean, frequency?: string, clientName?: string, expectedPayoutDate?: string, date?: string) => Promise<void>;
+  addExpense: (amount: number, category: string, subcategory?: string, note?: string, paymentMode?: string, venueName?: string, tag?: 'need' | 'want' | 'impulse', tripId?: string, linkedLoanId?: string, date?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addTrip: (name: string, destination?: string, startDate?: string, endDate?: string, totalBudget?: number, participants?: string[]) => Promise<void>;
   addTripExpense: (tripId: string, amount: number, category: string, description: string, paidBy: string, splitBetween: string[]) => Promise<void>;
@@ -548,16 +548,17 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   // ====================================================
   // ADD INCOME
   // ====================================================
-  addIncome: async (amount, source, note, paymentMode, isRecurring, frequency, clientName, expectedPayoutDate) => {
+  addIncome: async (amount, source, note, paymentMode, isRecurring, frequency, clientName, expectedPayoutDate, date) => {
     const { user, isPreviewMode, incomes } = get();
     const currentUserId = user?.id || 'user-mock-123';
+    const incomeDate = date || new Date().toISOString().split('T')[0];
 
     const newIncome: Income = {
       id: `inc-${Math.random().toString(36).substr(2, 9)}`,
       user_id: currentUserId,
       amount,
       source,
-      date: new Date().toISOString().split('T')[0],
+      date: incomeDate,
       note,
       payment_mode: paymentMode || 'UPI',
       is_recurring: isRecurring,
@@ -572,6 +573,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         amount,
         source,
         note,
+        date: incomeDate,
         payment_mode: paymentMode,
         is_recurring: isRecurring,
         frequency,
@@ -593,9 +595,10 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   // ====================================================
   // ADD EXPENSE (WITH BUDGET TRACKING)
   // ====================================================
-  addExpense: async (amount, category, subcategory, note, paymentMode, venueName, tag, tripId, linkedLoanId) => {
+  addExpense: async (amount, category, subcategory, note, paymentMode, venueName, tag, tripId, linkedLoanId, date) => {
     const { user, isPreviewMode, expenses, budgets, noSpendDays, savingsStreak } = get();
     const currentUserId = user?.id || 'user-mock-123';
+    const expenseDate = date || new Date().toISOString().split('T')[0];
 
     const newExpense: Expense = {
       id: `exp-${Math.random().toString(36).substr(2, 9)}`,
@@ -603,7 +606,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       amount,
       category,
       subcategory,
-      date: new Date().toISOString().split('T')[0],
+      date: expenseDate,
       note,
       payment_mode: paymentMode || 'UPI',
       venue_name: venueName,
@@ -642,6 +645,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         category,
         subcategory,
         note,
+        date: expenseDate,
         payment_mode: paymentMode,
         venue_name: venueName,
         tag,
