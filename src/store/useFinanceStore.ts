@@ -1285,12 +1285,16 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
     // Handle payment simulation
     if (reminder.type === 'loan' && reminder.amount) {
-      const activeLoan = get().loans.find(l => l.lender_name.toLowerCase() === reminder.title.toLowerCase() || l.emi_amount === reminder.amount);
+      const cleanTitle = reminder.title.toLowerCase().replace('emi:', '').replace('emi repayment:', '').replace('emi payment:', '').trim();
+      const activeLoan = get().loans.find(l => cleanTitle.includes(l.lender_name.toLowerCase()) || l.lender_name.toLowerCase().includes(cleanTitle)) ||
+                         get().loans.find(l => l.emi_amount === reminder.amount);
       if (activeLoan) {
         await get().payLoanEmi(activeLoan.id, reminder.amount);
       }
     } else if (reminder.type === 'sip' && reminder.amount) {
-      const activeSip = get().sips.find(s => s.fund_name.toLowerCase() === reminder.title.toLowerCase().replace('sip auto-debit: ', '') || s.monthly_amount === reminder.amount);
+      const cleanTitle = reminder.title.toLowerCase().replace('sip auto-debit:', '').replace('sip:', '').trim();
+      const activeSip = get().sips.find(s => cleanTitle.includes(s.fund_name.toLowerCase()) || s.fund_name.toLowerCase().includes(cleanTitle)) ||
+                        get().sips.find(s => s.monthly_amount === reminder.amount);
       if (activeSip) {
         // Log expense
         await get().addExpense(
