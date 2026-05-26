@@ -79,24 +79,85 @@ export default function DashboardPage() {
   const totalInvested = sips.reduce((acc, curr) => acc + Number(curr.total_invested), 0);
   const outstandingLoans = loans.reduce((acc, curr) => acc + Number(curr.remaining_balance), 0);
 
-  // Safe to Spend = (Base Allowance + Other Incomes - Outflow - Monthly Invested - Monthly EMIs)
-  const parentAllowanceIncomes = incomes
-    .filter(i => i.source === 'parent_allowance')
-    .reduce((acc, curr) => acc + Number(curr.amount), 0);
-
-  const baseAllowance = parentAllowanceIncomes > 0 
-    ? parentAllowanceIncomes 
-    : (user?.monthly_allowance ?? 12000);
-
-  const otherIncomes = incomes
-    .filter(i => i.source !== 'parent_allowance')
-    .reduce((acc, curr) => acc + Number(curr.amount), 0);
-
-  const totalAvailable = baseAllowance + otherIncomes;
-  
+  // Safe to Spend = Inflow (Total In) - Outflow - Monthly Invested - Monthly EMIs
   const monthlyInvested = sips.reduce((acc, curr) => acc + Number(curr.monthly_amount), 0);
   const monthlyEmi = loans.reduce((acc, curr) => acc + Number(curr.emi_amount), 0);
-  const safeToSpend = Math.max(0, totalAvailable - totalOut - monthlyInvested - monthlyEmi);
+  const safeToSpend = Math.max(0, totalIn - totalOut - monthlyInvested - monthlyEmi);
+
+  // Inflow Allocation Percentages (for visual advisor)
+  const expensePct = totalIn > 0 ? Math.min(100, (totalOut / totalIn) * 100) : 0;
+  const sipPct = totalIn > 0 ? Math.min(100 - expensePct, (monthlyInvested / totalIn) * 100) : 0;
+  const emiPct = totalIn > 0 ? Math.min(100 - expensePct - sipPct, (monthlyEmi / totalIn) * 100) : 0;
+  const safePct = totalIn > 0 ? Math.max(0, 100 - expensePct - sipPct - emiPct) : 0;
+
+  // Safety rating and suggestions
+  let safetyGrade = 'N/A';
+  let safetyColor = 'text-primary-fixed';
+  let safetyBg = 'bg-primary-fixed/10';
+  let safetyBorder = 'border-primary-fixed/20';
+  let safetyDescription = '';
+  let safetyTips: string[] = [];
+
+  if (totalIn === 0) {
+    safetyGrade = 'N/A';
+    safetyColor = 'text-[#849495]';
+    safetyBg = 'bg-white/5';
+    safetyBorder = 'border-white/10';
+    safetyDescription = 'No active inflow registered this month.';
+    safetyTips = [
+      'Log your monthly pocket money, allowance, or freelance income in the Transactions tab.',
+      'Active inflows serve as the foundation for your Safe-to-Spend budget.'
+    ];
+  } else {
+    const totalCommitted = monthlyEmi + monthlyInvested + totalOut;
+    const committedRatio = totalCommitted / totalIn;
+
+    if (committedRatio > 0.9) {
+      safetyGrade = 'D- (Critical)';
+      safetyColor = 'text-red-500';
+      safetyBg = 'bg-red-500/10';
+      safetyBorder = 'border-red-500/20';
+      safetyDescription = 'Overcommitted. More than 90% of your inflow is gone or spent.';
+      safetyTips = [
+        'Pause non-essential subscriptions or SIPs temporarily.',
+        'Avoid all "want" and "impulse" categories. Limit spending strictly to survival needs.',
+        'Consider finding supplementary income sources (gigs/freelance) to expand your inflow.'
+      ];
+    } else if (committedRatio > 0.7) {
+      safetyGrade = 'C (Caution)';
+      safetyColor = 'text-amber-500';
+      safetyBg = 'bg-amber-500/10';
+      safetyBorder = 'border-amber-500/20';
+      safetyDescription = 'Tight budget. Over 70% of your inflow is consumed by fixed costs and spending.';
+      safetyTips = [
+        'Review your active subscriptions and cancel unused ones.',
+        'Adopt the 24-hour rule: wait 24 hours before buying anything in your "want" list.',
+        'Keep a small cash buffer in your ledger for emergency expenses.'
+      ];
+    } else if (committedRatio > 0.4) {
+      safetyGrade = 'B (Balanced)';
+      safetyColor = 'text-blue-400';
+      safetyBg = 'bg-blue-400/10';
+      safetyBorder = 'border-blue-400/20';
+      safetyDescription = 'Balanced. You have moderate breathing room, but keep an eye on discretionary outflow.';
+      safetyTips = [
+        'Try to increase your savings rate. If you have extra cash, put it into a high-yield goal.',
+        'Set category budget limits (e.g., Food & Dining) to prevent creeping expenses.',
+        'Prioritize UPI payments only for pre-planned purchases.'
+      ];
+    } else {
+      safetyGrade = 'A+ (Excellent)';
+      safetyColor = 'text-emerald-400';
+      safetyBg = 'bg-emerald-400/10';
+      safetyBorder = 'border-emerald-400/20';
+      safetyDescription = 'Excellent. Over 60% of your inflow is liquid and free to allocate.';
+      safetyTips = [
+        'Establish or increase a recurring SIP to leverage compound growth early.',
+        'Allocate 10% of this safe cash into your emergency savings goal.',
+        'You are in a healthy position to afford minor splurges, but keep tracking!'
+      ];
+    }
+  }
 
   // Weekly spending details for Spending Pulse SVG
   const getWeeklySpend = (weekNum: number) => {
@@ -236,6 +297,93 @@ export default function DashboardPage() {
             <span className="font-mono text-[9px] uppercase tracking-widest text-[#849495]">7D Burn Rate</span>
             <span className="font-display text-xl font-bold text-white mt-1">₹{telemetry.burnRate7D.toLocaleString('en-IN')}<span className="text-xs font-normal text-on-surface-variant">/d</span></span>
           </div>
+        </div>
+      </section>
+
+      {/* SAFE SPENDING & INFLOW ALLOCATION ADVISOR */}
+      <section className="glass-panel p-6 rounded-2xl border border-white/5 flex flex-col lg:flex-row gap-8 bg-surface/5">
+        {/* Left Side: Allocation Chart */}
+        <div className="flex-1 flex flex-col justify-between gap-4">
+          <div>
+            <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Inflow Allocation Breakdown
+            </h3>
+            <p className="text-xs text-on-surface-variant mt-1">
+              Visualizing how your total inflow of <span className="text-white font-medium">₹{totalIn.toLocaleString('en-IN')}</span> is distributed.
+            </p>
+          </div>
+
+          {totalIn > 0 ? (
+            <div className="flex flex-col gap-6">
+              {/* Stacked Progress Bar */}
+              <div className="w-full h-4 rounded-full bg-white/5 overflow-hidden flex border border-white/10">
+                {expensePct > 0 && <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${expensePct}%` }} title={`Outflow: ${expensePct.toFixed(1)}%`} />}
+                {sipPct > 0 && <div className="h-full bg-blue-400 transition-all duration-300" style={{ width: `${sipPct}%` }} title={`SIPs: ${sipPct.toFixed(1)}%`} />}
+                {emiPct > 0 && <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${emiPct}%` }} title={`EMIs: ${emiPct.toFixed(1)}%`} />}
+                {safePct > 0 && <div className="h-full bg-emerald-400 transition-all duration-300" style={{ width: `${safePct}%` }} title={`Safe-to-Spend: ${safePct.toFixed(1)}%`} />}
+              </div>
+
+              {/* Legend with stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-red-500 shrink-0"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Outflow</span>
+                    <span className="text-xs text-white font-bold">₹{totalOut.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({expensePct.toFixed(0)}%)</span></span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-blue-400 shrink-0"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">SIP Investments</span>
+                    <span className="text-xs text-white font-bold">₹{monthlyInvested.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({sipPct.toFixed(0)}%)</span></span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-purple-500 shrink-0"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Loan EMIs</span>
+                    <span className="text-xs text-white font-bold">₹{monthlyEmi.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({emiPct.toFixed(0)}%)</span></span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-emerald-400 shrink-0"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-on-surface-variant uppercase tracking-wider font-mono">Safe to Spend</span>
+                    <span className="text-xs text-white font-bold">₹{safeToSpend.toLocaleString('en-IN')} <span className="text-[10px] font-normal text-on-surface-variant">({safePct.toFixed(0)}%)</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-16 rounded-xl border border-dashed border-white/10 flex items-center justify-center bg-white/2">
+              <span className="text-xs text-on-surface-variant">Waiting for inflow data to calculate allocation telemetry...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Safety Grade & Dynamic Advice */}
+        <div className="w-full lg:w-[350px] shrink-0 flex flex-col gap-4 border-t lg:border-t-0 lg:border-l border-white/5 pt-6 lg:pt-0 lg:pl-6">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-on-surface-variant uppercase tracking-widest font-mono">Safety Rating</span>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${safetyBg} ${safetyColor} border ${safetyBorder}`}>
+              {safetyGrade}
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-xs text-white font-medium leading-relaxed">{safetyDescription}</span>
+            <span className="text-[10px] text-on-surface-variant font-mono mt-2 uppercase tracking-wider">Recommendations for safe use:</span>
+          </div>
+
+          <ul className="flex flex-col gap-2">
+            {safetyTips.map((tip, i) => (
+              <li key={i} className="text-xs text-on-surface-variant flex items-start gap-2 leading-relaxed">
+                <span className="text-emerald-400 shrink-0 mt-0.5">•</span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
