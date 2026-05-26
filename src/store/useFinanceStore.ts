@@ -304,15 +304,15 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   noSpendDays: [],
 
   init: async () => {
-    // Check if Supabase keys exist & user session is present
-    if (isSupabaseConfigured) {
+    // 1. If Supabase is active, session is the single source of truth
+    if (isSupabaseConfigured && supabase) {
       try {
-        const { data: { session } } = await supabase!.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           const userId = session.user.id;
           
-          // 1. Fetch user profile
-          let { data: userProfile } = await supabase!
+          // Fetch user profile
+          let { data: userProfile } = await supabase
             .from('users')
             .select('*')
             .eq('id', userId)
@@ -330,7 +330,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
               student_type: 'undergraduate',
               main_income_source: 'parents'
             };
-            const { data: insertedProfile, error: insertError } = await supabase!
+            const { data: insertedProfile, error: insertError } = await supabase
               .from('users')
               .upsert(newProfile)
               .select('*')
@@ -344,26 +344,26 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             }
           }
 
-          // 2. Fetch user data tables
+          // Fetch all user data tables from Supabase
           const [
             incRes, expRes, tripRes, tripExpRes, loanRes,
             sipRes, budRes, goalRes, remRes, friendRes,
             sharedRes, settRes, subRes, insRes
           ] = await Promise.all([
-            supabase!.from('income').select('*').eq('user_id', userId),
-            supabase!.from('expenses').select('*').eq('user_id', userId),
-            supabase!.from('trips').select('*').eq('user_id', userId),
-            supabase!.from('trip_expenses').select('*').eq('user_id', userId),
-            supabase!.from('loans').select('*').eq('user_id', userId),
-            supabase!.from('sips').select('*').eq('user_id', userId),
-            supabase!.from('budgets').select('*').eq('user_id', userId),
-            supabase!.from('goals').select('*').eq('user_id', userId),
-            supabase!.from('reminders').select('*').eq('user_id', userId),
-            supabase!.from('friends').select('*').eq('user_id', userId),
-            supabase!.from('shared_expenses').select('*').eq('user_id', userId),
-            supabase!.from('settlements').select('*, shared_expenses!inner(user_id)').eq('shared_expenses.user_id', userId),
-            supabase!.from('subscriptions').select('*').eq('user_id', userId),
-            supabase!.from('ai_insights').select('*').eq('user_id', userId).eq('dismissed', false),
+            supabase.from('income').select('*').eq('user_id', userId),
+            supabase.from('expenses').select('*').eq('user_id', userId),
+            supabase.from('trips').select('*').eq('user_id', userId),
+            supabase.from('trip_expenses').select('*').eq('user_id', userId),
+            supabase.from('loans').select('*').eq('user_id', userId),
+            supabase.from('sips').select('*').eq('user_id', userId),
+            supabase.from('budgets').select('*').eq('user_id', userId),
+            supabase.from('goals').select('*').eq('user_id', userId),
+            supabase.from('reminders').select('*').eq('user_id', userId),
+            supabase.from('friends').select('*').eq('user_id', userId),
+            supabase.from('shared_expenses').select('*').eq('user_id', userId),
+            supabase.from('settlements').select('*, shared_expenses!inner(user_id)').eq('shared_expenses.user_id', userId),
+            supabase.from('subscriptions').select('*').eq('user_id', userId),
+            supabase.from('ai_insights').select('*').eq('user_id', userId).eq('dismissed', false),
           ]);
 
           set({
@@ -385,20 +385,43 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             insights: insRes.data || [],
           });
           return;
+        } else {
+          // No live session, but Supabase is configured -> Clear state so user is redirected to login
+          set({
+            isPreviewMode: false,
+            user: null,
+            incomes: [],
+            expenses: [],
+            trips: [],
+            tripExpenses: [],
+            loans: [],
+            sips: [],
+            budgets: [],
+            goals: [],
+            reminders: [],
+            friends: [],
+            sharedExpenses: [],
+            settlements: [],
+            subscriptions: [],
+            insights: [],
+            savingsStreak: 0,
+            noSpendDays: [],
+          });
+          return;
         }
       } catch (err) {
-        console.error("Failed to initialize Supabase, fallback to empty state", err);
+        console.error("Failed to initialize Supabase session", err);
       }
     }
 
-    // No Supabase session — start with clean empty state (or load from localStorage if mock/local mode)
+    // 2. If Supabase is NOT active, load from localStorage (Mock / Demo mode)
     const localData = localStorage.getItem('capitals_local_data_v1');
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
         if (parsed.user && parsed.user.id) {
           set({
-            isPreviewMode: !isSupabaseConfigured || parsed.user.id === 'user-mock-123',
+            isPreviewMode: true,
             user: parsed.user,
             incomes: parsed.incomes || [],
             expenses: parsed.expenses || [],
@@ -424,7 +447,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
     }
 
-    // Completely fresh empty state
+    // Completely fresh empty state (No Supabase, No LocalData)
     localStorage.removeItem('capitals_local_data_v1');
     set({
       isPreviewMode: true,
