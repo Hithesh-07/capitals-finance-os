@@ -314,6 +314,41 @@ interface FinanceState {
 }
 
 // ====================================================
+// HELPERS
+// ====================================================
+
+/**
+ * Compute savings streak = consecutive days going backwards from today
+ * where the user had ZERO 'impulse'-tagged expenses.
+ * A day with no expenses at all also counts as a no-impulse day.
+ */
+function computeSavingsStreak(expenses: Expense[]): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Build a Set of dates that had impulse spend
+  const impulseDays = new Set<string>();
+  expenses.forEach(e => {
+    if (e.tag === 'impulse') {
+      impulseDays.add(e.date.split('T')[0]);
+    }
+  });
+
+  let streak = 0;
+  const cursor = new Date(today);
+  // Start from yesterday (today isn't over yet)
+  cursor.setDate(cursor.getDate() - 1);
+
+  for (let i = 0; i < 365; i++) {
+    const dateStr = cursor.toISOString().split('T')[0];
+    if (impulseDays.has(dateStr)) break;
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+// ====================================================
 // IMPLEMENTATION
 // ====================================================
 
@@ -334,7 +369,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   settlements: [],
   subscriptions: [],
   insights: [],
-  savingsStreak: 3, // Mock initial streak
+  savingsStreak: 0,
   noSpendDays: [],
   creditCards: [],
   creditCardBills: [],
@@ -404,11 +439,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             supabase.from('credit_card_bills').select('*').eq('user_id', userId),
           ]);
 
+          const loadedExpenses = expRes.data || [];
           set({
             isPreviewMode: false,
             user: userProfile,
             incomes: incRes.data || [],
-            expenses: expRes.data || [],
+            expenses: loadedExpenses,
             trips: tripRes.data || [],
             tripExpenses: tripExpRes.data || [],
             loans: loanRes.data || [],
@@ -423,6 +459,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             insights: insRes.data || [],
             creditCards: ccRes.data || [],
             creditCardBills: ccBillRes.data || [],
+            savingsStreak: computeSavingsStreak(loadedExpenses),
           });
           return;
         } else {
@@ -462,11 +499,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       try {
         const parsed = JSON.parse(localData);
         if (parsed.user && parsed.user.id) {
+          const localExpenses: Expense[] = parsed.expenses || [];
           set({
             isPreviewMode: true,
             user: parsed.user,
             incomes: parsed.incomes || [],
-            expenses: parsed.expenses || [],
+            expenses: localExpenses,
             trips: parsed.trips || [],
             tripExpenses: parsed.tripExpenses || [],
             loans: parsed.loans || [],
@@ -479,7 +517,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             settlements: parsed.settlements || [],
             subscriptions: parsed.subscriptions || [],
             insights: parsed.insights || [],
-            savingsStreak: parsed.savingsStreak ?? 0,
+            savingsStreak: computeSavingsStreak(localExpenses),
             noSpendDays: parsed.noSpendDays || [],
             creditCards: parsed.creditCards || [],
             creditCardBills: parsed.creditCardBills || [],

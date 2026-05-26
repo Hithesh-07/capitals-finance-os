@@ -159,12 +159,54 @@ export default function DashboardPage() {
     }
   }
 
-  // Weekly spending details for Spending Pulse SVG
-  const getWeeklySpend = (weekNum: number) => {
-    // Mocking partition of monthly expenses into 4 weeks
-    const partitionIndex = [1500, 2300, 1800, 3100];
-    return partitionIndex[weekNum - 1] || 1200;
+  // Weekly spending — real data from expenses this month
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth();
+
+  // Bucket expenses into 4 weekly slots based on day-of-month
+  const weeklySpend = [0, 0, 0, 0];
+  expenses.forEach(e => {
+    const d = new Date(e.date);
+    if (d.getFullYear() === thisYear && d.getMonth() === thisMonth) {
+      const day = d.getDate();
+      const weekIdx = day <= 7 ? 0 : day <= 14 ? 1 : day <= 21 ? 2 : 3;
+      weeklySpend[weekIdx] += Number(e.amount);
+    }
+  });
+
+  // Generate SVG points from real weekly spend values
+  const maxWeekly = Math.max(...weeklySpend, 1);
+  // SVG viewBox is 500x200; bottom is y=200 (floor), chart area height = 160
+  const CHART_H = 160;
+  const FLOOR_Y = 195;
+  const weekXPositions = [50, 170, 300, 430];
+  const weekPoints = weeklySpend.map((spend, i) => ({
+    x: weekXPositions[i],
+    y: FLOOR_Y - Math.round((spend / maxWeekly) * CHART_H),
+    spend,
+  }));
+
+  // Build smooth SVG cubic bezier path from points
+  const buildPath = (pts: { x: number; y: number }[]) => {
+    if (pts.length === 0) return '';
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1];
+      const curr = pts[i];
+      const cpX = (prev.x + curr.x) / 2;
+      d += ` C ${cpX},${prev.y} ${cpX},${curr.y} ${curr.x},${curr.y}`;
+    }
+    return d;
   };
+
+  const pulsePath = buildPath(weekPoints);
+  const pulseAreaPath = pulsePath
+    ? `${pulsePath} L ${weekPoints[weekPoints.length - 1].x},${FLOOR_Y} L ${weekPoints[0].x},${FLOOR_Y} Z`
+    : '';
+
+  const weekLabels = ['W1', 'W2', 'W3', 'W4'];
+  const formatWeekAmt = (v: number) => v >= 1000 ? `₹${(v / 1000).toFixed(1)}k` : v > 0 ? `₹${v}` : '—';
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-container-max mx-auto pb-12">
@@ -410,50 +452,92 @@ export default function DashboardPage() {
         {/* Right 5 cols: Spending Pulse & Budgets */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           
-          {/* Spending Pulse Chart (mocked identical to design) */}
+          {/* Spending Pulse Chart — real weekly data */}
           <div className="glass-panel p-6 rounded-3xl flex flex-col">
             <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-3">
               <h3 className="font-display font-semibold text-white text-sm">Spending Pulse</h3>
               <span className="font-mono text-[9px] uppercase text-tertiary-fixed border border-tertiary-fixed/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-tertiary-fixed animate-pulse" /> Live Telemetry
+                <span className="w-1.5 h-1.5 rounded-full bg-tertiary-fixed animate-pulse" /> Live · {now.toLocaleString('default', { month: 'short', year: 'numeric' })}
               </span>
             </div>
             
             <div className="relative h-44 flex items-end">
-              {/* SVG path mapping weeks */}
-              <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="g-glow" x1="0%" x2="0%" y1="0%" y2="100%">
-                    <stop offset="0%" stopColor="#72ff70" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#72ff70" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {/* Area path */}
-                <path 
-                  d="M 0,180 C 50,160 100,170 150,130 C 200,90 250,110 300,70 C 350,30 400,120 450,40 L 450,200 L 0,200 Z" 
-                  fill="url(#g-glow)" 
-                />
-                {/* Stroke path */}
-                <path 
-                  className="pulse-line"
-                  d="M 0,180 C 50,160 100,170 150,130 C 200,90 250,110 300,70 C 350,30 400,120 450,40" 
-                  fill="none" 
-                  stroke="#72ff70" 
-                  strokeWidth="3.5" 
-                />
-                
-                {/* Week dots */}
-                <circle cx="150" cy="130" r="5" fill="#000" stroke="#72ff70" strokeWidth="2.5" className="cursor-pointer hover:r-8 transition-all" />
-                <circle cx="300" cy="70" r="5" fill="#000" stroke="#72ff70" strokeWidth="2.5" className="cursor-pointer hover:r-8 transition-all" />
-                <circle cx="450" cy="40" r="5" fill="#000" stroke="#72ff70" strokeWidth="2.5" className="cursor-pointer hover:r-8 transition-all" />
-              </svg>
+              {totalOut === 0 ? (
+                <div className="w-full h-full flex items-center justify-center text-[10px] font-mono text-[#849495] uppercase tracking-wider">
+                  No expense data this month
+                </div>
+              ) : (
+                <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="g-glow" x1="0%" x2="0%" y1="0%" y2="100%">
+                      <stop offset="0%" stopColor="#72ff70" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#72ff70" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {/* Grid lines */}
+                  {[0.25, 0.5, 0.75].map((frac, i) => (
+                    <line
+                      key={i}
+                      x1="30" y1={FLOOR_Y - CHART_H * frac}
+                      x2="470" y2={FLOOR_Y - CHART_H * frac}
+                      stroke="rgba(255,255,255,0.03)" strokeWidth="1"
+                    />
+                  ))}
+                  {/* Area fill */}
+                  {pulseAreaPath && (
+                    <path d={pulseAreaPath} fill="url(#g-glow)" />
+                  )}
+                  {/* Stroke line */}
+                  {pulsePath && (
+                    <path
+                      className="pulse-line"
+                      d={pulsePath}
+                      fill="none"
+                      stroke="#72ff70"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                  {/* Week dots + vertical drop lines */}
+                  {weekPoints.map((pt, i) => (
+                    <g key={i}>
+                      <line
+                        x1={pt.x} y1={pt.y + 6}
+                        x2={pt.x} y2={FLOOR_Y}
+                        stroke="rgba(114,255,112,0.12)" strokeWidth="1" strokeDasharray="3 4"
+                      />
+                      <circle
+                        cx={pt.x} cy={pt.y}
+                        r="5" fill="#000" stroke="#72ff70" strokeWidth="2.5"
+                      />
+                      {/* Spend amount above dot */}
+                      {weeklySpend[i] > 0 && (
+                        <text
+                          x={pt.x} y={pt.y - 10}
+                          textAnchor="middle"
+                          fontSize="9"
+                          fill="#72ff70"
+                          fontFamily="monospace"
+                          opacity="0.85"
+                        >
+                          {formatWeekAmt(weeklySpend[i])}
+                        </text>
+                      )}
+                    </g>
+                  ))}
+                  {/* Floor line */}
+                  <line x1="30" y1={FLOOR_Y} x2="470" y2={FLOOR_Y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                </svg>
+              )}
             </div>
             
             <div className="flex justify-between items-center text-[10px] font-mono text-on-surface-variant px-1 mt-4">
-              <span>W1 (₹1.5k)</span>
-              <span>W2 (₹2.3k)</span>
-              <span>W3 (₹1.8k)</span>
-              <span>W4 (₹3.1k)</span>
+              {weekLabels.map((lbl, i) => (
+                <span key={i} className={weeklySpend[i] > 0 ? 'text-[#b9caca]' : 'text-white/20'}>
+                  {lbl} ({formatWeekAmt(weeklySpend[i])})
+                </span>
+              ))}
             </div>
           </div>
 
@@ -539,7 +623,16 @@ export default function DashboardPage() {
             </div>
           </div>
           <span className="text-[10px] text-[#849495] font-mono mt-4">
-            Skip impulse purchases tomorrow to hit 4 days!
+            {savingsStreak === 0
+              ? 'Log a no-impulse day today to start your streak!'
+              : savingsStreak < 3
+              ? `${savingsStreak} day${savingsStreak > 1 ? 's' : ''} in — keep avoiding impulse buys!`
+              : savingsStreak < 7
+              ? `${savingsStreak} days strong — ${7 - savingsStreak} more to hit a full week!`
+              : savingsStreak < 30
+              ? `${savingsStreak} days — incredible discipline! Aim for ${30 - savingsStreak} more days to hit a month.`
+              : `${savingsStreak} days — you are a savings legend! 🔥`
+            }
           </span>
         </div>
 
