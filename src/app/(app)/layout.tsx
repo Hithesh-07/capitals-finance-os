@@ -607,7 +607,7 @@ export default function AppLayout({
         </header>
 
         {/* PAGE CONTENT CONTAINER */}
-        <main className="flex-grow p-6 md:p-margin-desktop relative z-20 overflow-y-auto mt-16 md:mt-0">
+        <main className="flex-grow p-6 md:p-margin-desktop relative overflow-y-auto mt-16 md:mt-0">
           {children}
         </main>
       </div>
