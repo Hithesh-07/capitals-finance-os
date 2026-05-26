@@ -11,7 +11,7 @@ import {
 
 export default function DashboardPage() {
   const { 
-    incomes, expenses, loans, sips, budgets, subscriptions, 
+    user, incomes, expenses, loans, sips, budgets, subscriptions, 
     insights, savingsStreak, getBrokemanTelemetry, markReminderPaid, reminders
   } = useFinanceStore();
 
@@ -79,14 +79,24 @@ export default function DashboardPage() {
   const totalInvested = sips.reduce((acc, curr) => acc + Number(curr.total_invested), 0);
   const outstandingLoans = loans.reduce((acc, curr) => acc + Number(curr.remaining_balance), 0);
 
-  // Safe to Spend = (Income this month - Investments - loan EMIs) - expenses this month
-  const monthlyAllowance = incomes
+  // Safe to Spend = (Base Allowance + Other Incomes - Outflow - Monthly Invested - Monthly EMIs)
+  const parentAllowanceIncomes = incomes
     .filter(i => i.source === 'parent_allowance')
-    .reduce((acc, curr) => acc + Number(curr.amount), 0) || 12000;
+    .reduce((acc, curr) => acc + Number(curr.amount), 0);
+
+  const baseAllowance = parentAllowanceIncomes > 0 
+    ? parentAllowanceIncomes 
+    : (user?.monthly_allowance ?? 12000);
+
+  const otherIncomes = incomes
+    .filter(i => i.source !== 'parent_allowance')
+    .reduce((acc, curr) => acc + Number(curr.amount), 0);
+
+  const totalAvailable = baseAllowance + otherIncomes;
   
   const monthlyInvested = sips.reduce((acc, curr) => acc + Number(curr.monthly_amount), 0);
   const monthlyEmi = loans.reduce((acc, curr) => acc + Number(curr.emi_amount), 0);
-  const safeToSpend = Math.max(0, monthlyAllowance - totalOut - monthlyInvested - monthlyEmi);
+  const safeToSpend = Math.max(0, totalAvailable - totalOut - monthlyInvested - monthlyEmi);
 
   // Weekly spending details for Spending Pulse SVG
   const getWeeklySpend = (weekNum: number) => {
