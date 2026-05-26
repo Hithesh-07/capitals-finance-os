@@ -9,7 +9,7 @@ import {
   LayoutDashboard, History, Users, Map, Coins, 
   TrendingUp, PiggyBank, Target, CalendarClock, PieChart, 
   Calendar, Settings, Bell, LogOut, Sparkles, Menu, X, PlusCircle, AlertTriangle,
-  Moon, Flame, Percent
+  Moon, Flame, Percent, CreditCard
 } from 'lucide-react';
 
 export default function AppLayout({
@@ -21,7 +21,8 @@ export default function AppLayout({
   const router = useRouter();
   const { 
     init, user, setUser, isPreviewMode,
-    expenses, reminders, loans, sips, savingsStreak, sharedExpenses, budgets
+    expenses, reminders, loans, sips, savingsStreak, sharedExpenses, budgets,
+    creditCards, creditCardBills
   } = useFinanceStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -188,8 +189,71 @@ export default function AppLayout({
       }
     });
 
+    // 7. Credit Card Billing & Utilization Alerts
+    creditCards.forEach(card => {
+      const balance = Number(card.outstanding_balance);
+      const limit = Number(card.card_limit);
+      
+      // A. Utilization Warnings
+      if (limit > 0 && balance > 0) {
+        const utilRatio = balance / limit;
+        if (utilRatio >= 0.8) {
+          list.push({
+            id: `card-util-crit-${card.id}`,
+            type: 'card_util_critical',
+            title: 'Critical Card Limit',
+            message: `${card.bank_name} ${card.card_name} limit is ${Math.round(utilRatio * 100)}% utilized (₹${balance.toLocaleString('en-IN')} / ₹${limit.toLocaleString('en-IN')})! Pay down balance immediately.`,
+            time: 'CC Limit Alert',
+            urgent: true,
+          });
+        } else if (utilRatio >= 0.3) {
+          list.push({
+            id: `card-util-warn-${card.id}`,
+            type: 'card_util_warning',
+            title: 'Card Limit Utilization',
+            message: `${card.bank_name} ${card.card_name} is at ${Math.round(utilRatio * 100)}% utilization. Keeping utilization under 30% helps protect your credit score.`,
+            time: 'CC Limit Alert',
+            urgent: false,
+          });
+        }
+      }
+
+      // B. Payment Due Reminders
+      if (balance > 0 && card.due_date) {
+        const diffDays = getDaysDifference(card.due_date, todayStr);
+        if (diffDays === 0) {
+          list.push({
+            id: `card-due-today-${card.id}`,
+            type: 'reminder_today',
+            title: 'Credit Card Bill Due',
+            message: `Your bill of ₹${balance.toLocaleString('en-IN')} for ${card.bank_name} ${card.card_name} is due today!`,
+            time: 'Today',
+            urgent: true,
+          });
+        } else if (diffDays === 1) {
+          list.push({
+            id: `card-due-tom-${card.id}`,
+            type: 'reminder_tomorrow',
+            title: 'Credit Card Bill Tomorrow',
+            message: `Your bill of ₹${balance.toLocaleString('en-IN')} for ${card.bank_name} ${card.card_name} is due tomorrow.`,
+            time: 'Tomorrow',
+            urgent: true,
+          });
+        } else if (diffDays < 0) {
+          list.push({
+            id: `card-due-overdue-${card.id}`,
+            type: 'reminder_overdue',
+            title: 'Credit Card Bill Overdue',
+            message: `Your bill of ₹${balance.toLocaleString('en-IN')} for ${card.bank_name} ${card.card_name} was due ${Math.abs(diffDays)} day(s) ago!`,
+            time: `${Math.abs(diffDays)}d ago`,
+            urgent: true,
+          });
+        }
+      }
+    });
+
     return list;
-  }, [user, expenses, reminders, loans, savingsStreak, sharedExpenses, budgets]);
+  }, [user, expenses, reminders, loans, savingsStreak, sharedExpenses, budgets, creditCards]);
 
   const renderNotificationDropdown = (isMobile: boolean = false) => {
     return (
@@ -243,11 +307,11 @@ export default function AppLayout({
                 Icon = Users;
                 iconColor = 'text-primary-fixed';
                 bgColor = 'bg-primary-fixed/5 border-primary-fixed/20';
-              } else if (item.type === 'budget_exceeded') {
+              } else if (item.type === 'budget_exceeded' || item.type === 'card_util_critical') {
                 Icon = AlertTriangle;
                 iconColor = 'text-red-400';
                 bgColor = 'bg-red-500/5 border-red-500/20';
-              } else if (item.type === 'budget_warning') {
+              } else if (item.type === 'budget_warning' || item.type === 'card_util_warning') {
                 Icon = Percent;
                 iconColor = 'text-yellow-400';
                 bgColor = 'bg-yellow-500/5 border-yellow-500/20';
@@ -302,6 +366,7 @@ export default function AppLayout({
     { href: '/trips', label: 'Trips Module', icon: Map },
     { href: '/loans', label: 'Loan Sentinel', icon: Coins },
     { href: '/sips', label: 'SIP Vault', icon: TrendingUp },
+    { href: '/cards', label: 'Cards Sentinel', icon: CreditCard },
     { href: '/budgets', label: 'Budgets', icon: PiggyBank },
     { href: '/goals', label: 'Goals', icon: Target },
     { href: '/reminders', label: 'Reminders', icon: CalendarClock },

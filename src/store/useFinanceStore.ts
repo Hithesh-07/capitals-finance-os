@@ -51,6 +51,7 @@ export interface Expense {
   tag?: 'need' | 'want' | 'impulse';
   trip_id?: string;
   linked_loan_id?: string;
+  linked_credit_card_id?: string;
   is_recurring?: boolean;
   frequency?: string;
   receipt_url?: string;
@@ -215,6 +216,30 @@ export interface AiInsight {
   dismissed: boolean;
 }
 
+export interface CreditCard {
+  id: string;
+  user_id: string;
+  card_name: string;
+  bank_name: string;
+  card_limit: number;
+  outstanding_balance: number;
+  due_date: string;
+  statement_date: string;
+  card_network: string;
+  card_theme: string;
+  created_at?: string;
+}
+
+export interface CreditCardBill {
+  id: string;
+  card_id: string;
+  user_id: string;
+  bill_amount: number;
+  due_date: string;
+  status: 'paid' | 'unpaid';
+  created_at?: string;
+}
+
 // ====================================================
 // STORE STATE INTERFACE
 // ====================================================
@@ -238,6 +263,8 @@ interface FinanceState {
   insights: AiInsight[];
   savingsStreak: number;
   noSpendDays: string[]; // ISO date strings
+  creditCards: CreditCard[];
+  creditCardBills: CreditCardBill[];
 
   // Core Actions
   init: () => Promise<void>;
@@ -245,10 +272,13 @@ interface FinanceState {
   
   // Mutations
   addIncome: (amount: number, source: string, note?: string, paymentMode?: string, isRecurring?: boolean, frequency?: string, clientName?: string, expectedPayoutDate?: string, date?: string) => Promise<void>;
-  addExpense: (amount: number, category: string, subcategory?: string, note?: string, paymentMode?: string, venueName?: string, tag?: 'need' | 'want' | 'impulse', tripId?: string, linkedLoanId?: string, date?: string) => Promise<void>;
+  addExpense: (amount: number, category: string, subcategory?: string, note?: string, paymentMode?: string, venueName?: string, tag?: 'need' | 'want' | 'impulse', tripId?: string, linkedLoanId?: string, date?: string, linkedCreditCardId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
   editExpense: (id: string, amount: number, category: string, note: string, paymentMode: string, date: string, tag: 'need' | 'want' | 'impulse') => Promise<void>;
+  addCreditCard: (cardName: string, bankName: string, cardLimit: number, dueDate: string, statementDate: string, cardNetwork: string, cardTheme?: string) => Promise<void>;
+  deleteCreditCard: (cardId: string) => Promise<void>;
+  payCardBill: (cardId: string, amount: number) => Promise<void>;
   editIncome: (id: string, amount: number, source: string, note: string, paymentMode: string, date: string) => Promise<void>;
   addTrip: (name: string, destination?: string, startDate?: string, endDate?: string, totalBudget?: number, participants?: string[]) => Promise<void>;
   addTripExpense: (tripId: string, amount: number, category: string, description: string, paidBy: string, splitBetween: string[]) => Promise<void>;
@@ -306,6 +336,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   insights: [],
   savingsStreak: 3, // Mock initial streak
   noSpendDays: [],
+  creditCards: [],
+  creditCardBills: [],
 
   init: async () => {
     // 1. If Supabase is active, session is the single source of truth
@@ -352,7 +384,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           const [
             incRes, expRes, tripRes, tripExpRes, loanRes,
             sipRes, budRes, goalRes, remRes, friendRes,
-            sharedRes, settRes, subRes, insRes
+            sharedRes, settRes, subRes, insRes, ccRes, ccBillRes
           ] = await Promise.all([
             supabase.from('income').select('*').eq('user_id', userId),
             supabase.from('expenses').select('*').eq('user_id', userId),
@@ -368,6 +400,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             supabase.from('settlements').select('*, shared_expenses!inner(user_id)').eq('shared_expenses.user_id', userId),
             supabase.from('subscriptions').select('*').eq('user_id', userId),
             supabase.from('ai_insights').select('*').eq('user_id', userId).eq('dismissed', false),
+            supabase.from('credit_cards').select('*').eq('user_id', userId),
+            supabase.from('credit_card_bills').select('*').eq('user_id', userId),
           ]);
 
           set({
@@ -387,6 +421,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             settlements: settRes.data || [],
             subscriptions: subRes.data || [],
             insights: insRes.data || [],
+            creditCards: ccRes.data || [],
+            creditCardBills: ccBillRes.data || [],
           });
           return;
         } else {
@@ -410,6 +446,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             insights: [],
             savingsStreak: 0,
             noSpendDays: [],
+            creditCards: [],
+            creditCardBills: [],
           });
           return;
         }
@@ -443,6 +481,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             insights: parsed.insights || [],
             savingsStreak: parsed.savingsStreak ?? 0,
             noSpendDays: parsed.noSpendDays || [],
+            creditCards: parsed.creditCards || [],
+            creditCardBills: parsed.creditCardBills || [],
           });
           return;
         }
@@ -472,6 +512,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       insights: [],
       savingsStreak: 0,
       noSpendDays: [],
+      creditCards: [],
+      creditCardBills: [],
     });
   },
 
@@ -539,7 +581,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   // ====================================================
   // ADD EXPENSE (WITH BUDGET TRACKING)
   // ====================================================
-  addExpense: async (amount, category, subcategory, note, paymentMode, venueName, tag, tripId, linkedLoanId, date) => {
+  addExpense: async (amount, category, subcategory, note, paymentMode, venueName, tag, tripId, linkedLoanId, date, linkedCreditCardId) => {
     const { user, isPreviewMode, expenses, budgets, noSpendDays, savingsStreak } = get();
     const expenseDate = date || new Date().toISOString().split('T')[0];
 
@@ -563,6 +605,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       tag: tag || 'need',
       trip_id: tripId,
       linked_loan_id: linkedLoanId,
+      linked_credit_card_id: linkedCreditCardId,
       created_at: new Date().toISOString()
     };
 
@@ -601,10 +644,22 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         tag,
         trip_id: tripId,
         linked_loan_id: linkedLoanId,
+        linked_credit_card_id: linkedCreditCardId,
         user_id: currentUserId
       });
       if (error) throw error;
       
+      // Update Credit Card outstanding balance in DB
+      if (linkedCreditCardId) {
+        const card = get().creditCards.find(c => c.id === linkedCreditCardId);
+        if (card) {
+          await supabase
+            .from('credit_cards')
+            .update({ outstanding_balance: Number(card.outstanding_balance) + amount })
+            .eq('id', linkedCreditCardId);
+        }
+      }
+
       // Update Budget spent in DB
       const currentBud = budgets.find(b => b.category === category && b.month === m && b.year === y);
       if (currentBud) {
@@ -616,12 +671,23 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
       await get().init();
     } else {
+      let updatedCards = get().creditCards;
+      if (linkedCreditCardId) {
+        updatedCards = updatedCards.map(c => {
+          if (c.id === linkedCreditCardId) {
+            return { ...c, outstanding_balance: Number(c.outstanding_balance) + amount };
+          }
+          return c;
+        });
+      }
+
       const updatedExpenses = [newExpense, ...expenses];
       set({ 
         expenses: updatedExpenses, 
         budgets: updatedBudgets,
         savingsStreak: newStreak,
-        noSpendDays: updatedNoSpend
+        noSpendDays: updatedNoSpend,
+        creditCards: updatedCards
       });
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ 
@@ -629,7 +695,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         expenses: updatedExpenses,
         budgets: updatedBudgets,
         savingsStreak: newStreak,
-        noSpendDays: updatedNoSpend
+        noSpendDays: updatedNoSpend,
+        creditCards: updatedCards
       }));
     }
   },
@@ -651,6 +718,16 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     });
 
     if (!isPreviewMode && supabase) {
+      if (exp.linked_credit_card_id) {
+        const card = get().creditCards.find(c => c.id === exp.linked_credit_card_id);
+        if (card) {
+          await supabase
+            .from('credit_cards')
+            .update({ outstanding_balance: Math.max(0, Number(card.outstanding_balance) - exp.amount) })
+            .eq('id', exp.linked_credit_card_id);
+        }
+      }
+
       await supabase.from('expenses').delete().eq('id', id);
       const currentBud = budgets.find(b => b.category === exp.category && b.month === m && b.year === y);
       if (currentBud) {
@@ -661,13 +738,24 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
       await get().init();
     } else {
+      let updatedCards = get().creditCards;
+      if (exp.linked_credit_card_id) {
+        updatedCards = updatedCards.map(c => {
+          if (c.id === exp.linked_credit_card_id) {
+            return { ...c, outstanding_balance: Math.max(0, Number(c.outstanding_balance) - exp.amount) };
+          }
+          return c;
+        });
+      }
+
       const updatedExpenses = expenses.filter(e => e.id !== id);
-      set({ expenses: updatedExpenses, budgets: updatedBudgets });
+      set({ expenses: updatedExpenses, budgets: updatedBudgets, creditCards: updatedCards });
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ 
         ...currentLocal, 
-        expenses: updatedExpenses,
-        budgets: updatedBudgets
+        expenses: updatedExpenses, 
+        budgets: updatedBudgets,
+        creditCards: updatedCards
       }));
     }
   },
@@ -1614,6 +1702,115 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       set({ insights: updated });
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, insights: updated }));
+    }
+  },
+
+  addCreditCard: async (cardName, bankName, cardLimit, dueDate, statementDate, cardNetwork, cardTheme) => {
+    const { isPreviewMode, user, creditCards } = get();
+    const currentUserId = user?.id || 'user-mock-123';
+
+    const newCard: CreditCard = {
+      id: `cc-${Math.random().toString(36).substr(2, 9)}`,
+      user_id: currentUserId,
+      card_name: cardName,
+      bank_name: bankName,
+      card_limit: cardLimit,
+      outstanding_balance: 0,
+      due_date: dueDate,
+      statement_date: statementDate,
+      card_network: cardNetwork,
+      card_theme: cardTheme || 'dark_metal',
+      created_at: new Date().toISOString()
+    };
+
+    if (!isPreviewMode && supabase) {
+      await supabase.from('credit_cards').insert({
+        card_name: cardName,
+        bank_name: bankName,
+        card_limit: cardLimit,
+        outstanding_balance: 0,
+        due_date: dueDate,
+        statement_date: statementDate,
+        card_network: cardNetwork,
+        card_theme: cardTheme || 'dark_metal',
+        user_id: currentUserId
+      });
+      await get().init();
+    } else {
+      const updated = [newCard, ...creditCards];
+      set({ creditCards: updated });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, creditCards: updated }));
+    }
+
+    // Auto-create a payment reminder for this credit card bill
+    try {
+      await get().addReminder(
+        `Credit Card Bill: ${bankName} ${cardName}`,
+        0, // amount is 0 initially, will update when statements are computed
+        dueDate,
+        'custom',
+        '09:00:00',
+        false
+      );
+    } catch (e) {
+      console.error("Failed to auto-register credit card reminder", e);
+    }
+  },
+
+  deleteCreditCard: async (cardId) => {
+    const { isPreviewMode, creditCards } = get();
+
+    if (!isPreviewMode && supabase) {
+      await supabase.from('credit_cards').delete().eq('id', cardId);
+      await get().init();
+    } else {
+      const updated = creditCards.filter(c => c.id !== cardId);
+      set({ creditCards: updated });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, creditCards: updated }));
+    }
+  },
+
+  payCardBill: async (cardId, amount) => {
+    const { isPreviewMode, creditCards } = get();
+    const card = creditCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    // 1. Pay the bill - decreases outstanding balance
+    const newBalance = Math.max(0, Number(card.outstanding_balance) - amount);
+
+    // 2. Generate a standard payment expense transaction
+    await get().addExpense(
+      amount,
+      'Loans & EMI',
+      'Credit Card Bill',
+      `Settled credit card bill for ${card.bank_name} ${card.card_name}`,
+      'UPI', // Default payment mode for bill clearance
+      undefined,
+      'need',
+      undefined,
+      undefined,
+      new Date().toISOString().split('T')[0]
+    );
+
+    // 3. Update the credit card balance record
+    if (!isPreviewMode && supabase) {
+      await supabase
+        .from('credit_cards')
+        .update({ outstanding_balance: newBalance })
+        .eq('id', cardId);
+      await get().init();
+    } else {
+      const updated = creditCards.map(c => {
+        if (c.id === cardId) {
+          return { ...c, outstanding_balance: newBalance };
+        }
+        return c;
+      });
+      set({ creditCards: updated });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, creditCards: updated }));
     }
   },
 

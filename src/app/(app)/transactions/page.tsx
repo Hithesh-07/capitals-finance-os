@@ -11,7 +11,7 @@ import {
 export default function TransactionsPage() {
   const searchParams = useSearchParams();
   const { 
-    expenses, incomes, addExpense, addIncome, deleteExpense, deleteIncome, editExpense, editIncome, isPreviewMode 
+    expenses, incomes, addExpense, addIncome, deleteExpense, deleteIncome, editExpense, editIncome, isPreviewMode, creditCards 
   } = useFinanceStore();
 
   const [activeTab, setActiveTab] = useState<'all' | 'expense' | 'income'>('all');
@@ -31,6 +31,7 @@ export default function TransactionsPage() {
   const [paymentMode, setPaymentMode] = useState('UPI');
   const [venueName, setVenueName] = useState('');
   const [tag, setTag] = useState<'need' | 'want' | 'impulse'>('need');
+  const [linkedCreditCardId, setLinkedCreditCardId] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Receipt Scanner states
@@ -81,6 +82,7 @@ export default function TransactionsPage() {
     setFormType('expense');
     setPaymentMode('UPI');
     setTag('need');
+    setLinkedCreditCardId('');
     setShowAddModal(true);
   };
 
@@ -95,6 +97,7 @@ export default function TransactionsPage() {
       setCategory(tx.category);
       setTag(tx.tag || 'need');
       setVenueName(tx.venue_name || '');
+      setLinkedCreditCardId(tx.linked_credit_card_id || '');
     } else {
       setSource(tx.source || 'pocket_money');
     }
@@ -153,7 +156,8 @@ export default function TransactionsPage() {
             tag,
             undefined,
             undefined,
-            date
+            date,
+            (paymentMode === 'Card' && linkedCreditCardId) ? linkedCreditCardId : undefined
           );
         } else {
           await addIncome(
@@ -633,6 +637,24 @@ export default function TransactionsPage() {
                       placeholder="Swiggy, CMRL, Nescafe"
                       className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                     />
+                  </div>
+                )}
+
+                {formType === 'expense' && paymentMode === 'Card' && creditCards.length > 0 && (
+                  <div className="flex flex-col gap-1">
+                    <label className="font-mono text-[9px] uppercase text-[#849495] tracking-wider">Select Credit Card</label>
+                    <select
+                      value={linkedCreditCardId}
+                      onChange={e => setLinkedCreditCardId(e.target.value)}
+                      className="w-full bg-black border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-primary-fixed"
+                    >
+                      <option value="">-- Choose Credit Card --</option>
+                      {creditCards.map(cc => (
+                        <option key={cc.id} value={cc.id}>
+                          {cc.bank_name} {cc.card_name} (Avail: ₹{(cc.card_limit - cc.outstanding_balance).toLocaleString('en-IN')})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
 
