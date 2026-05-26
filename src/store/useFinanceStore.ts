@@ -247,6 +247,9 @@ interface FinanceState {
   addIncome: (amount: number, source: string, note?: string, paymentMode?: string, isRecurring?: boolean, frequency?: string, clientName?: string, expectedPayoutDate?: string, date?: string) => Promise<void>;
   addExpense: (amount: number, category: string, subcategory?: string, note?: string, paymentMode?: string, venueName?: string, tag?: 'need' | 'want' | 'impulse', tripId?: string, linkedLoanId?: string, date?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  deleteIncome: (id: string) => Promise<void>;
+  editExpense: (id: string, amount: number, category: string, note: string, paymentMode: string, date: string, tag: 'need' | 'want' | 'impulse') => Promise<void>;
+  editIncome: (id: string, amount: number, source: string, note: string, paymentMode: string, date: string) => Promise<void>;
   addTrip: (name: string, destination?: string, startDate?: string, endDate?: string, totalBudget?: number, participants?: string[]) => Promise<void>;
   addTripExpense: (tripId: string, amount: number, category: string, description: string, paidBy: string, splitBetween: string[]) => Promise<void>;
   addLoan: (lenderName: string, principal: number, interestRate: number, emiAmount: number, startDate: string, dueDate: string, loanType?: string) => Promise<void>;
@@ -665,6 +668,121 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         expenses: updatedExpenses,
         budgets: updatedBudgets
       }));
+    }
+  },
+
+  deleteIncome: async (id) => {
+    const { isPreviewMode, incomes } = get();
+    if (!isPreviewMode && supabase) {
+      await supabase.from('income').delete().eq('id', id);
+      await get().init();
+    } else {
+      const updatedIncomes = incomes.filter(i => i.id !== id);
+      set({ incomes: updatedIncomes });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, incomes: updatedIncomes }));
+    }
+  },
+
+  editExpense: async (id, amount, category, note, paymentMode, date, tag) => {
+    const { isPreviewMode, expenses, budgets } = get();
+    const exp = expenses.find(e => e.id === id);
+    if (!exp) return;
+
+    const oldDate = new Date(exp.date);
+    const oldM = oldDate.getMonth() + 1;
+    const oldY = oldDate.getFullYear();
+
+    const newDate = new Date(date);
+    const newM = newDate.getMonth() + 1;
+    const newY = newDate.getFullYear();
+
+    let updatedBudgets = [...budgets];
+    updatedBudgets = updatedBudgets.map(b => {
+      if (b.category === exp.category && b.month === oldM && b.year === oldY) {
+        return { ...b, spent: Math.max(0, Number(b.spent) - exp.amount) };
+      }
+      return b;
+    });
+    updatedBudgets = updatedBudgets.map(b => {
+      if (b.category === category && b.month === newM && b.year === newY) {
+        return { ...b, spent: Number(b.spent) + amount };
+      }
+      return b;
+    });
+
+    if (!isPreviewMode && supabase) {
+      await supabase
+        .from('expenses')
+        .update({
+          amount,
+          category,
+          note,
+          date,
+          payment_mode: paymentMode,
+          tag
+        })
+        .eq('id', id);
+
+      const oldBud = budgets.find(b => b.category === exp.category && b.month === oldM && b.year === oldY);
+      if (oldBud) {
+        await supabase
+          .from('budgets')
+          .update({ spent: Math.max(0, Number(oldBud.spent) - exp.amount) })
+          .eq('id', oldBud.id);
+      }
+      const newBud = budgets.find(b => b.category === category && b.month === newM && b.year === newY);
+      if (newBud) {
+        await supabase
+          .from('budgets')
+          .update({ spent: Number(newBud.spent) + amount })
+          .eq('id', newBud.id);
+      }
+      await get().init();
+    } else {
+      const updatedExpenses = expenses.map(e => {
+        if (e.id === id) {
+          return { ...e, amount, category, note, date, payment_mode: paymentMode, tag };
+        }
+        return e;
+      });
+      set({ expenses: updatedExpenses, budgets: updatedBudgets });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ 
+        ...currentLocal, 
+        expenses: updatedExpenses, 
+        budgets: updatedBudgets 
+      }));
+    }
+  },
+
+  editIncome: async (id, amount, source, note, paymentMode, date) => {
+    const { isPreviewMode, incomes } = get();
+    const inc = incomes.find(i => i.id === id);
+    if (!inc) return;
+
+    if (!isPreviewMode && supabase) {
+      await supabase
+        .from('income')
+        .update({
+          amount,
+          source,
+          note,
+          date,
+          payment_mode: paymentMode
+        })
+        .eq('id', id);
+      await get().init();
+    } else {
+      const updatedIncomes = incomes.map(i => {
+        if (i.id === id) {
+          return { ...i, amount, source, note, date, payment_mode: paymentMode };
+        }
+        return i;
+      });
+      set({ incomes: updatedIncomes });
+      const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+      localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, incomes: updatedIncomes }));
     }
   },
 

@@ -243,7 +243,7 @@ export default function AppLayout({
             {/* User widget */}
             <Link href="/settings" className="flex items-center gap-3 hover:opacity-85 transition-opacity">
               <span className="text-xs font-mono uppercase tracking-wider text-[#b9caca]">
-                {user?.college || user?.email?.split('@')[0] || 'CapitalS'}
+                {user?.name || user?.email?.split('@')[0] || 'CapitalS'}
               </span>
               <img 
                 src={user?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user?.name}`} 
