@@ -21,6 +21,7 @@ export default function SipsPage() {
   const [calcMonthly, setCalcMonthly] = useState(1500);
   const [calcReturn, setCalcReturn] = useState(15);
   const [calcYears, setCalcYears] = useState(5);
+  const [calcInflation, setCalcInflation] = useState(6);
 
   const [tick, setTick] = useState(0);
 
@@ -64,16 +65,30 @@ export default function SipsPage() {
     const i = (calcReturn / 100) / 12;
     const n = calcYears * 12;
 
-    if (i === 0) return { invested: P * n, total: P * n, gains: 0 };
+    if (i === 0) {
+      const total = P * n;
+      const realValue = total / Math.pow(1 + calcInflation / 100, calcYears);
+      return { 
+        invested: P * n, 
+        total: P * n, 
+        gains: 0,
+        realValue: Math.round(realValue),
+        realGains: Math.max(0, Math.round(realValue) - (P * n))
+      };
+    }
 
     const total = P * (((Math.pow(1 + i, n) - 1) / i) * (1 + i));
     const invested = P * n;
     const gains = Math.max(0, total - invested);
+    const realValue = total / Math.pow(1 + calcInflation / 100, calcYears);
+    const realGains = Math.max(0, realValue - invested);
 
     return {
       invested: Math.round(invested),
       total: Math.round(total),
-      gains: Math.round(gains)
+      gains: Math.round(gains),
+      realValue: Math.round(realValue),
+      realGains: Math.round(realGains)
     };
   };
 
@@ -252,6 +267,23 @@ export default function SipsPage() {
                 className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary-fixed"
               />
             </div>
+
+            {/* Input Slider 4: Inflation */}
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-[#849495]">Expected Inflation Rate</span>
+                <span className="text-red-400 font-semibold">{calcInflation}%</span>
+              </div>
+              <input 
+                type="range"
+                min="0"
+                max="15"
+                step="1"
+                value={calcInflation}
+                onChange={e => setCalcInflation(Number(e.target.value))}
+                className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary-fixed"
+              />
+            </div>
           </div>
 
           <div className="h-[1px] bg-white/10 w-full" />
@@ -262,13 +294,36 @@ export default function SipsPage() {
               <span>Invested Amount:</span>
               <span className="text-white">₹{wealth.invested.toLocaleString('en-IN')}</span>
             </div>
-            <div className="flex justify-between text-[#849495]">
-              <span>Est. Capital Gains:</span>
-              <span className="text-tertiary-fixed">₹{wealth.gains.toLocaleString('en-IN')}</span>
+            
+            <div className="border-t border-white/5 pt-2 flex flex-col gap-2">
+              <div className="flex justify-between text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
+                <span>Nominal Returns (Non-Adjusted)</span>
+              </div>
+              <div className="flex justify-between text-[#849495]">
+                <span>Est. Capital Gains:</span>
+                <span className="text-tertiary-fixed">₹{wealth.gains.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-white">Total Value:</span>
+                <span className="text-primary-fixed">₹{wealth.total.toLocaleString('en-IN')}</span>
+              </div>
             </div>
-            <div className="flex justify-between border-t border-white/5 pt-2 text-sm font-semibold">
-              <span className="text-white">Total Value:</span>
-              <span className="text-primary-fixed">₹{wealth.total.toLocaleString('en-IN')}</span>
+
+            <div className="border-t border-white/5 pt-2 flex flex-col gap-2 bg-white/2 p-2.5 rounded-xl border border-white/5">
+              <div className="flex justify-between text-[10px] text-[#efdbff] uppercase tracking-wider font-semibold">
+                <span>Real Returns (Inflation Adjusted)</span>
+              </div>
+              <div className="flex justify-between text-[#849495]">
+                <span>Real Capital Gains:</span>
+                <span className="text-[#dcb8ff]">₹{wealth.realGains.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-[#efdbff]">Real Purchasing Power:</span>
+                <span className="text-[#dcb8ff]">₹{wealth.realValue.toLocaleString('en-IN')}</span>
+              </div>
+              <span className="text-[9px] text-[#849495] leading-normal font-sans italic">
+                * Adjusted for an annual inflation rate of {calcInflation}%, which reflects the equivalent purchasing power of your money today.
+              </span>
             </div>
           </div>
         </div>
