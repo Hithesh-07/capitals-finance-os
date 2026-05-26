@@ -933,7 +933,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
 
   payLoanEmi: async (loanId, emiAmount) => {
-    const { isPreviewMode, loans } = get();
+    const { isPreviewMode, loans, reminders } = get();
 
     // Trigger an automatic expense log for Loans & EMI
     await get().addExpense(
@@ -948,28 +948,45 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       loanId
     );
 
+    const advanceDateByOneMonth = (dateStr: string): string => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      let nextMonth = month + 1;
+      let nextYear = year;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear += 1;
+      }
+      const daysInNextMonth = new Date(nextYear, nextMonth, 0).getDate();
+      const nextDay = Math.min(day, daysInNextMonth);
+      return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
+    };
+
     const updatedLoans = loans.map(l => {
       if (l.id === loanId) {
         const paid = Number(l.total_paid) + emiAmount;
         const bal = Math.max(0, Number(l.principal) - paid);
+        const nextDue = bal <= 0 ? l.due_date : advanceDateByOneMonth(l.due_date);
         return {
           ...l,
           total_paid: paid,
           remaining_balance: bal,
+          due_date: nextDue,
           status: bal <= 0 ? 'paid' as const : l.status
         };
       }
       return l;
     });
 
+    const updated = updatedLoans.find(l => l.id === loanId);
+
     if (!isPreviewMode && supabase) {
-      const updated = updatedLoans.find(l => l.id === loanId);
       if (updated) {
         await supabase
           .from('loans')
           .update({
             total_paid: updated.total_paid,
             remaining_balance: updated.remaining_balance,
+            due_date: updated.due_date,
             status: updated.status
           })
           .eq('id', loanId);
@@ -979,6 +996,37 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       set({ loans: updatedLoans });
       const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
       localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, loans: updatedLoans }));
+    }
+
+    // Auto-mark any matching loan reminder for this month as paid
+    if (updated) {
+      const matchingRem = reminders.find(
+        r => r.type === 'loan' &&
+             r.status === 'pending' &&
+             (r.title.toLowerCase().includes(updated.lender_name.toLowerCase()) || r.amount === emiAmount)
+      );
+      if (matchingRem) {
+        const updatedRems = reminders.map(r => r.id === matchingRem.id ? { ...r, status: 'paid' as const } : r);
+        if (!isPreviewMode && supabase) {
+          await supabase.from('reminders').update({ status: 'paid' }).eq('id', matchingRem.id);
+        } else {
+          set({ reminders: updatedRems });
+        }
+      }
+
+      // Auto-register a new reminder for the next month's EMI on the same day of the month
+      if (updated.status === 'active') {
+        try {
+          await get().addReminder(
+            `EMI: ${updated.lender_name}`,
+            updated.emi_amount,
+            updated.due_date,
+            'loan',
+            '09:00:00',
+            false
+          );
+        } catch (_) { /* best-effort */ }
+      }
     }
   },
 
@@ -1241,9 +1289,72 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         await get().payLoanEmi(activeLoan.id, reminder.amount);
       }
     } else if (reminder.type === 'sip' && reminder.amount) {
-      const activeSip = get().sips.find(s => s.monthly_amount === reminder.amount);
+      const activeSip = get().sips.find(s => s.fund_name.toLowerCase() === reminder.title.toLowerCase().replace('sip auto-debit: ', '') || s.monthly_amount === reminder.amount);
       if (activeSip) {
-        await get().addExpense(reminder.amount, 'Investments', 'SIP Payment', reminder.title, 'UPI', activeSip.fund_name, 'need');
+        // Log expense
+        await get().addExpense(
+          reminder.amount,
+          'Investments',
+          'SIP Payment',
+          reminder.title,
+          'UPI',
+          activeSip.fund_name,
+          'need'
+        );
+
+        const advanceDateByOneMonth = (dateStr: string): string => {
+          const [year, month, day] = dateStr.split('-').map(Number);
+          let nextMonth = month + 1;
+          let nextYear = year;
+          if (nextMonth > 12) {
+            nextMonth = 1;
+            nextYear += 1;
+          }
+          const daysInNextMonth = new Date(nextYear, nextMonth, 0).getDate();
+          const nextDay = Math.min(day, daysInNextMonth);
+          return `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
+        };
+
+        const nextPayment = advanceDateByOneMonth(activeSip.next_payment_date);
+
+        if (!isPreviewMode && supabase) {
+          await supabase
+            .from('sips')
+            .update({
+              next_payment_date: nextPayment,
+              total_invested: Number(activeSip.total_invested) + reminder.amount,
+              current_value: Number(activeSip.current_value) + reminder.amount
+            })
+            .eq('id', activeSip.id);
+          await get().init();
+        } else {
+          const updatedSips = get().sips.map(s => {
+            if (s.id === activeSip.id) {
+              return {
+                ...s,
+                next_payment_date: nextPayment,
+                total_invested: Number(s.total_invested) + reminder.amount!,
+                current_value: Number(s.current_value) + reminder.amount!
+              };
+            }
+            return s;
+          });
+          set({ sips: updatedSips });
+          const currentLocal = JSON.parse(localStorage.getItem('capitals_local_data_v1') || '{}');
+          localStorage.setItem('capitals_local_data_v1', JSON.stringify({ ...currentLocal, sips: updatedSips }));
+        }
+
+        // Add a new reminder for the next month's SIP on the same day of the month
+        try {
+          await get().addReminder(
+            `SIP Auto-Debit: ${activeSip.fund_name}`,
+            activeSip.monthly_amount,
+            nextPayment,
+            'sip',
+            '09:00:00',
+            false
+          );
+        } catch (_) { /* best-effort */ }
       }
     } else if (reminder.amount) {
       // General subscription, rent or custom

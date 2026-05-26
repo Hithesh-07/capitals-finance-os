@@ -112,7 +112,10 @@ export default function RemindersPage() {
                   <div className="flex flex-col">
                     <h3 className="font-display font-semibold text-white text-sm">{rem.title}</h3>
                     <span className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wider mt-0.5">
-                      Due: {new Date(rem.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      Due: {(() => {
+                        const [y, m, d] = rem.due_date.split('-').map(Number);
+                        return new Date(y, m - 1, d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                      })()}
                       {rem.amount ? ` | ₹${rem.amount}` : ''}
                       {rem.autopay ? ' | AutoPay Enabled' : ''}
                     </span>
