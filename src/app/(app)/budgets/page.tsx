@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
   PiggyBank, Plus, AlertOctagon, AlertTriangle, ShieldCheck, RefreshCw, X 
@@ -8,10 +8,6 @@ import {
 
 export default function BudgetsPage() {
   const { budgets, addBudget, expenses } = useFinanceStore();
-
-  useEffect(() => {
-    document.title = "Budgets | CapitalS";
-  }, []);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [category, setCategory] = useState('Food & Dining');

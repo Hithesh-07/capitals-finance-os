@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { 
@@ -10,10 +10,6 @@ import {
 
 export default function SettingsPage() {
   const { user, setUser, isPreviewMode, savingsStreak, sips, expenses, sharedExpenses } = useFinanceStore();
-
-  useEffect(() => {
-    document.title = "Settings | CapitalS";
-  }, []);
 
   const [name, setName] = useState(user?.name || '');
   const [college, setCollege] = useState(user?.college || '');

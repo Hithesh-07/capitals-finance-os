@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
   Users, Plus, Send, Phone, BadgePercent, CheckCircle2, MessageSquare, Check, X, Trash2
@@ -10,10 +10,6 @@ export default function SplitExpensesPage() {
   const { 
     friends, sharedExpenses, settlements, addFriend, addSharedExpense, settleSplitBill, deleteFriend, user 
   } = useFinanceStore();
-
-  useEffect(() => {
-    document.title = "Split Bills | CapitalS";
-  }, []);
 
   const [friendName, setFriendName] = useState('');
   const [friendPhone, setFriendPhone] = useState('');
@@ -333,7 +329,7 @@ export default function SplitExpensesPage() {
                           <a
                             href={generateWhatsAppLink(name, balance)}
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel="noreferrer"
                             className="p-1.5 rounded-lg border border-white/5 hover:border-tertiary-fixed/30 hover:bg-tertiary-fixed/5 text-on-surface-variant hover:text-tertiary-fixed transition-colors"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />

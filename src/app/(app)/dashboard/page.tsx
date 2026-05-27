@@ -6,7 +6,7 @@ import { useFinanceStore } from '@/store/useFinanceStore';
 import ExpenseOrbit from '@/components/dashboard/ExpenseOrbit';
 import { 
   ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Coins, 
-  Sparkles, PiggyBank, Plus, RefreshCw, Send, AlertTriangle, ShieldCheck, Flame, Bell
+  Sparkles, PiggyBank, Plus, RefreshCw, Send, AlertTriangle, ShieldCheck, Flame
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -30,7 +30,6 @@ export default function DashboardPage() {
   const [sipCountdown, setSipCountdown] = useState('');
 
   useEffect(() => {
-    document.title = "Dashboard | CapitalS";
     // Calculate initial telemetry
     setTelemetry(getBrokemanTelemetry());
     
@@ -652,38 +651,28 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            {reminders.length === 0 ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center gap-2 text-on-surface-variant">
-                <Bell className="w-8 h-8 opacity-25" />
-                <span className="font-mono text-[10px] uppercase tracking-wider">No pending reminders</span>
-                <p className="text-[9px] max-w-[220px] leading-relaxed">
-                  Add EMIs, SIPs, or bills to get notified before they go overdue.
-                </p>
-              </div>
-            ) : (
-              reminders.slice(0, 3).map(rem => (
-                <div key={rem.id} className="flex justify-between items-center p-3 rounded-xl bg-white/3 border border-white/5 hover:border-white/10 transition-colors">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-white">{rem.title}</span>
-                    <span className="text-[10px] text-on-surface-variant font-mono">
-                      Due: {new Date(rem.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} | ₹{rem.amount}
-                    </span>
-                  </div>
-                  {rem.status === 'pending' ? (
-                    <button 
-                      onClick={() => markReminderPaid(rem.id)}
-                      className="px-3.5 py-1.5 rounded-lg border border-primary-fixed/20 hover:border-primary-fixed/40 text-[10px] font-mono uppercase tracking-wider text-primary-fixed hover:bg-primary-fixed/5 active:scale-95 transition-all"
-                    >
-                      Pay / Clear
-                    </button>
-                  ) : (
-                    <span className="px-3.5 py-1.5 text-[10px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 rounded-lg border border-tertiary-fixed/10">
-                      Settled
-                    </span>
-                  )}
+            {reminders.slice(0, 3).map(rem => (
+              <div key={rem.id} className="flex justify-between items-center p-3 rounded-xl bg-white/3 border border-white/5 hover:border-white/10 transition-colors">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-semibold text-white">{rem.title}</span>
+                  <span className="text-[10px] text-on-surface-variant font-mono">
+                    Due: {new Date(rem.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} | ₹{rem.amount}
+                  </span>
                 </div>
-              ))
-            )}
+                {rem.status === 'pending' ? (
+                  <button 
+                    onClick={() => markReminderPaid(rem.id)}
+                    className="px-3.5 py-1.5 rounded-lg border border-primary-fixed/20 hover:border-primary-fixed/40 text-[10px] font-mono uppercase tracking-wider text-primary-fixed hover:bg-primary-fixed/5 active:scale-95 transition-all"
+                  >
+                    Pay / Clear
+                  </button>
+                ) : (
+                  <span className="px-3.5 py-1.5 text-[10px] font-mono uppercase tracking-wider text-tertiary-fixed bg-tertiary-fixed/5 rounded-lg border border-tertiary-fixed/10">
+                    Settled
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -695,40 +684,30 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            {subscriptions.length === 0 ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center gap-2 text-on-surface-variant">
-                <RefreshCw className="w-8 h-8 opacity-25" />
-                <span className="font-mono text-[10px] uppercase tracking-wider">No active subscriptions</span>
-                <p className="text-[9px] max-w-[220px] leading-relaxed">
-                  Add streaming services to track and split bill shares with friends.
-                </p>
-              </div>
-            ) : (
-              subscriptions.map(sub => (
-                <div key={sub.id} className="flex justify-between items-center p-3 rounded-xl bg-white/3 border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-bold text-white text-sm font-mono">
-                      {sub.name[0]}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-semibold text-white">{sub.name}</span>
-                      <span className="text-[10px] text-on-surface-variant font-mono">
-                        Renewal: {new Date(sub.renewal_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
+            {subscriptions.map(sub => (
+              <div key={sub.id} className="flex justify-between items-center p-3 rounded-xl bg-white/3 border border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-bold text-white text-sm font-mono">
+                    {sub.name[0]}
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-mono text-white block">₹{sub.amount}/mo</span>
-                    <span className="text-[9px] text-[#849495] font-mono">
-                      {sub.shared_with && sub.shared_with.length > 0 
-                        ? `Split with ${sub.shared_with.join(', ')}` 
-                        : 'Personal'
-                      }
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-semibold text-white">{sub.name}</span>
+                    <span className="text-[10px] text-on-surface-variant font-mono">
+                      Renewal: {new Date(sub.renewal_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                 </div>
-              ))
-            )}
+                <div className="text-right">
+                  <span className="text-xs font-mono text-white block">₹{sub.amount}/mo</span>
+                  <span className="text-[9px] text-[#849495] font-mono">
+                    {sub.shared_with && sub.shared_with.length > 0 
+                      ? `Split with ${sub.shared_with.join(', ')}` 
+                      : 'Personal'
+                    }
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

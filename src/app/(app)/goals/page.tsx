@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
   Target, Plus, Calendar, Coins, Sparkles, X, Heart, ShieldAlert 
@@ -9,10 +9,6 @@ import confetti from 'canvas-confetti';
 
 export default function GoalsPage() {
   const { goals, addGoal, contributeToGoal } = useFinanceStore();
-
-  useEffect(() => {
-    document.title = "Goals | CapitalS";
-  }, []);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');

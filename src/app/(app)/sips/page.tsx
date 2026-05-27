@@ -26,7 +26,6 @@ export default function SipsPage() {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    document.title = "SIPs | CapitalS";
     const interval = setInterval(() => {
       setTick(t => t + 1);
     }, 1000);

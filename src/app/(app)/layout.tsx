@@ -387,14 +387,6 @@ export default function AppLayout({
   return (
     <div className="min-h-screen flex bg-black text-[#e5e2e1] font-sans relative">
       
-      {/* Skip to main content — visible on keyboard focus only */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only"
-      >
-        Skip to content
-      </a>
-      
       {/* Click-outside overlay for notification center */}
       {notificationsOpen && (
         <div 
@@ -485,9 +477,6 @@ export default function AppLayout({
           <div className="relative">
             <button 
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              aria-label={`Notifications${notifications.length > 0 ? ` (${notifications.length} alerts)` : ''}`}
-              aria-expanded={notificationsOpen}
-              aria-haspopup="true"
               className={`p-2 border rounded-xl transition-all relative z-50 ${
                 notificationsOpen 
                   ? 'border-primary-fixed/40 bg-primary-fixed/5 text-primary-fixed' 
@@ -496,17 +485,16 @@ export default function AppLayout({
             >
               <Bell className="w-4 h-4" />
               {notifications.length > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" aria-hidden="true" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
               )}
             </button>
             {notificationsOpen && renderNotificationDropdown(true)}
           </div>
-          <Link href="/transactions?action=add" className="p-2 text-primary-fixed" aria-label="Add transaction">
+          <Link href="/transactions?action=add" className="p-2 text-primary-fixed">
             <PlusCircle className="w-5 h-5" />
           </Link>
           <button 
             onClick={() => setMobileMenuOpen(true)}
-            aria-label="Open navigation menu"
             className="p-2 border border-white/5 rounded-lg text-[#b9caca]"
           >
             <Menu className="w-5 h-5" />
@@ -520,8 +508,7 @@ export default function AppLayout({
           <div className="w-64 border-r border-white/5 bg-black/90 p-6 flex flex-col justify-between h-full relative">
             <button 
               onClick={() => setMobileMenuOpen(false)}
-              aria-label="Close navigation menu"
-              className="absolute top-4 right-4 p-3 text-on-surface-variant hover:text-white transition-colors"
+              className="absolute top-4 right-4 p-2 text-on-surface-variant"
             >
               <X className="w-5 h-5" />
             </button>
@@ -591,9 +578,6 @@ export default function AppLayout({
             <div className="relative">
               <button 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                aria-label={`Notifications${notifications.length > 0 ? ` (${notifications.length} alerts)` : ''}`}
-                aria-expanded={notificationsOpen}
-                aria-haspopup="true"
                 className={`p-2 border rounded-xl transition-all relative z-50 ${
                   notificationsOpen 
                     ? 'border-primary-fixed/40 bg-primary-fixed/5 text-primary-fixed' 
@@ -602,7 +586,7 @@ export default function AppLayout({
               >
                 <Bell className="w-4 h-4" />
                 {notifications.length > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" aria-hidden="true" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
                 )}
               </button>
               {notificationsOpen && renderNotificationDropdown(false)}
@@ -623,7 +607,7 @@ export default function AppLayout({
         </header>
 
         {/* PAGE CONTENT CONTAINER */}
-        <main id="main-content" className="flex-grow p-4 md:p-margin-desktop relative overflow-y-auto mt-16 md:mt-0">
+        <main className="flex-grow p-6 md:p-margin-desktop relative overflow-y-auto mt-16 md:mt-0">
           {children}
         </main>
       </div>

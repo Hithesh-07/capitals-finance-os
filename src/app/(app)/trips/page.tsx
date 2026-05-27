@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
   Map, Plus, Calendar, MapPin, DollarSign, Users, X, Info, CheckCircle2, ChevronRight
@@ -8,10 +8,6 @@ import {
 
 export default function TripsPage() {
   const { trips, tripExpenses, addTrip, addTripExpense, friends } = useFinanceStore();
-
-  useEffect(() => {
-    document.title = "Trips | CapitalS";
-  }, []);
 
   const [showAddTrip, setShowAddTrip] = useState(false);
   const [tripName, setTripName] = useState('');
