@@ -14,6 +14,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user, setUser, addBudget, addLoan, addSip, isPreviewMode } = useFinanceStore();
   const [step, setStep] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   // States
   const [studentType, setStudentType] = useState('undergraduate');
@@ -28,10 +29,17 @@ export default function OnboardingPage() {
   const [travelBudget, setTravelBudget] = useState(1500);
   const [shoppingBudget, setShoppingBudget] = useState(2000);
 
-  const nextStep = () => setStep(s => Math.min(6, s + 1));
-  const prevStep = () => setStep(s => Math.max(1, s - 1));
+  const nextStep = () => {
+    setError(null);
+    setStep(s => Math.min(6, s + 1));
+  };
+  const prevStep = () => {
+    setError(null);
+    setStep(s => Math.max(1, s - 1));
+  };
 
   const handleFinish = async () => {
+    setError(null);
     try {
       const updatedUser = {
         ...user,
@@ -51,7 +59,8 @@ export default function OnboardingPage() {
 
       // If Supabase is active, sync user row
       if (!isPreviewMode && supabase) {
-        await supabase.from('users').upsert(updatedUser);
+        const { error: upsertError } = await supabase.from('users').upsert(updatedUser);
+        if (upsertError) throw upsertError;
       }
 
       // Add budget categories
@@ -76,8 +85,9 @@ export default function OnboardingPage() {
       }
 
       router.push('/dashboard');
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error saving onboarding details", e);
+      setError(e?.message || "Failed to initialize account. Please try again.");
     }
   };
 
@@ -129,6 +139,17 @@ export default function OnboardingPage() {
                 <h2 className="font-display text-xl font-bold text-white tracking-tight">{stepsInfo[step - 1].title}</h2>
                 <p className="text-xs text-on-surface-variant mt-1">{stepsInfo[step - 1].desc}</p>
               </div>
+
+              {error && (
+                <div 
+                  className="flex items-center gap-2 p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-medium"
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-red-500" />
+                  <span>{error}</span>
+                </div>
+              )}
 
               {/* STEP 1: Student Type */}
               {step === 1 && (
@@ -253,8 +274,10 @@ export default function OnboardingPage() {
                         <label className="font-mono text-[9px] uppercase text-[#849495] tracking-wider">Remaining Balance (₹)</label>
                         <input
                           type="number"
+                          min="0"
+                          max="10000000"
                           value={loanPrincipal}
-                          onChange={e => setLoanPrincipal(Number(e.target.value))}
+                          onChange={e => setLoanPrincipal(Math.max(0, Number(e.target.value)))}
                           className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                         />
                       </div>
@@ -295,8 +318,10 @@ export default function OnboardingPage() {
                         <label className="font-mono text-[9px] uppercase text-[#849495] tracking-wider">Monthly SIP Amount (₹)</label>
                         <input
                           type="number"
+                          min="0"
+                          max="10000000"
                           value={sipAmount}
-                          onChange={e => setSipAmount(Number(e.target.value))}
+                          onChange={e => setSipAmount(Math.max(0, Number(e.target.value)))}
                           className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                         />
                       </div>
@@ -312,8 +337,10 @@ export default function OnboardingPage() {
                     <label className="font-mono text-[9px] uppercase text-[#849495] tracking-wider">Food & Dining Limit (₹)</label>
                     <input
                       type="number"
+                      min="0"
+                      max="10000000"
                       value={foodBudget}
-                      onChange={e => setFoodBudget(Number(e.target.value))}
+                      onChange={e => setFoodBudget(Math.max(0, Number(e.target.value)))}
                       className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                     />
                   </div>
@@ -321,8 +348,10 @@ export default function OnboardingPage() {
                     <label className="font-mono text-[9px] uppercase text-[#849495] tracking-wider">Travel / Commute Limit (₹)</label>
                     <input
                       type="number"
+                      min="0"
+                      max="10000000"
                       value={travelBudget}
-                      onChange={e => setTravelBudget(Number(e.target.value))}
+                      onChange={e => setTravelBudget(Math.max(0, Number(e.target.value)))}
                       className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                     />
                   </div>
@@ -330,8 +359,10 @@ export default function OnboardingPage() {
                     <label className="font-mono text-[9px] uppercase text-[#849495] tracking-wider">Shopping Limit (₹)</label>
                     <input
                       type="number"
+                      min="0"
+                      max="10000000"
                       value={shoppingBudget}
-                      onChange={e => setShoppingBudget(Number(e.target.value))}
+                      onChange={e => setShoppingBudget(Math.max(0, Number(e.target.value)))}
                       className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-primary-fixed"
                     />
                   </div>

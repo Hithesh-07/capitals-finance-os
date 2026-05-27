@@ -32,6 +32,7 @@ export default function CreditCardsPage() {
 
   // Sync selected card state if card gets deleted
   React.useEffect(() => {
+    document.title = "Cards | CapitalS";
     if (creditCards.length > 0 && !selectedCardId) {
       setSelectedCardId(creditCards[0].id);
     } else if (creditCards.length === 0) {

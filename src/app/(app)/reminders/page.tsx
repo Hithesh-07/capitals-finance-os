@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
   CalendarClock, Plus, Bell, AlertTriangle, ShieldCheck, X, Hourglass, Trash2
@@ -8,6 +8,10 @@ import {
 
 export default function RemindersPage() {
   const { reminders, addReminder, markReminderPaid, deleteReminder, isPreviewMode } = useFinanceStore();
+
+  useEffect(() => {
+    document.title = "Reminders | CapitalS";
+  }, []);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [title, setTitle] = useState('');

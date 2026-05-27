@@ -22,6 +22,7 @@ export default function LoansPage() {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
+    document.title = "Loans | CapitalS";
     const interval = setInterval(() => {
       setTick(t => t + 1);
     }, 1000);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, AlertTriangle, Check, Trash2, CreditCard
@@ -11,6 +11,10 @@ export default function CalendarPage() {
     reminders, markReminderPaid, deleteReminder,
     loans, sips, deleteLoan, deleteSip, payLoanEmi 
   } = useFinanceStore();
+
+  useEffect(() => {
+    document.title = "Calendar | CapitalS";
+  }, []);
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(

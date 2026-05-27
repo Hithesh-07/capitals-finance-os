@@ -34,7 +34,7 @@ export default function ContactPage() {
           <p className="text-xs text-on-surface-variant leading-relaxed">
             Split balances or link settlements assistance.
           </p>
-          <a href="https://wa.me/919999999999" target="_blank" rel="noreferrer" className="font-mono text-sm text-primary-fixed mt-auto hover:underline">
+          <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-primary-fixed mt-auto hover:underline">
             +91 99999 99999
           </a>
         </div>

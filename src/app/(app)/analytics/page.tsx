@@ -276,7 +276,10 @@ export default function AnalyticsPage() {
   const [mounted, setMounted] = useState(false);
   const sceneRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    setMounted(true); 
+    document.title = "Analytics | CapitalS";
+  }, []);
 
   // Mouse parallax on scene
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -422,7 +425,16 @@ export default function AnalyticsPage() {
                 className="chart-tilt-inner glass-panel rounded-3xl p-6"
                 style={{ background: 'radial-gradient(ellipse at center, rgba(99,247,255,0.04) 0%, rgba(10,10,10,0.8) 70%)' }}
               >
-                <div style={{ height: 280 }}>
+                <div 
+                  style={{ height: 280 }}
+                  role="img"
+                  aria-label={categoryData.length > 0 ? "Outflow Category Split Pie Chart" : "No expense telemetry recorded"}
+                >
+                  <div className="sr-only">
+                    {categoryData.length > 0 
+                      ? `Outflow Category Split: ${categoryData.map(c => `${c.name}: ₹${c.value.toLocaleString('en-IN')}`).join(', ')}`
+                      : "No expense telemetry recorded"}
+                  </div>
                   {categoryData.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-xs text-[#849495] font-mono uppercase">
                       No expense telemetry recorded
@@ -488,11 +500,16 @@ export default function AnalyticsPage() {
 
             <div
               className="glass-panel rounded-3xl p-6 flex flex-col"
+              role="img"
+              aria-label="Cashflow 3D Comparison Chart"
               style={{
                 background: 'radial-gradient(ellipse at bottom center, rgba(114,255,112,0.04) 0%, rgba(10,10,10,0.8) 70%)',
                 minHeight: 320,
               }}
             >
+              <div className="sr-only">
+                Cashflow 3D Comparison: Inflow is ₹{totalIn.toLocaleString('en-IN')}, Outflow is ₹{totalOut.toLocaleString('en-IN')}, Net is ₹{netBalance.toLocaleString('en-IN')} ({netBalance >= 0 ? 'Positive' : 'Negative'})
+              </div>
               {/* Grid lines */}
               <div className="relative flex-1 flex flex-col justify-end">
                 {[100, 75, 50, 25].map(pct => (
@@ -544,11 +561,18 @@ export default function AnalyticsPage() {
 
             <div
               className="glass-panel rounded-3xl p-8 flex flex-col gap-6"
+              role="img"
+              aria-label="Impulse Guard Behavior Cockpit Dials"
               style={{
                 background: 'radial-gradient(ellipse at top right, rgba(119,1,208,0.06) 0%, rgba(10,10,10,0.8) 70%)',
                 minHeight: 280,
               }}
             >
+              <div className="sr-only">
+                {tagTotal > 0 
+                  ? `Impulse Guard spending split: Needs are ₹${impulseTotals.need.toLocaleString('en-IN')}, Wants are ₹${impulseTotals.want.toLocaleString('en-IN')}, Impulse is ₹${impulseTotals.impulse.toLocaleString('en-IN')}. Total tagged spend is ₹${tagTotal.toLocaleString('en-IN')}.`
+                  : "No tagged expenses logged"}
+              </div>
               {tagTotal === 0 ? (
                 <div className="flex-1 flex items-center justify-center flex-col gap-3 py-8">
                   <ShieldCheck className="w-8 h-8 text-tertiary-fixed animate-pulse" />

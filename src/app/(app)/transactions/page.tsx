@@ -41,6 +41,7 @@ export default function TransactionsPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Transactions | CapitalS";
     if (searchParams.get('action') === 'add') {
       handleOpenAddModal();
     }
@@ -372,6 +373,7 @@ export default function TransactionsPage() {
                         <button 
                           onClick={() => handleEditClick(tx)}
                           title="Edit Transaction"
+                          aria-label={`Edit transaction ${tx.note || tx.category}`}
                           className="p-1.5 rounded-lg border border-white/5 hover:border-primary-fixed/30 text-on-surface-variant hover:text-primary-fixed hover:bg-primary-fixed/5 transition-all"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -387,6 +389,7 @@ export default function TransactionsPage() {
                             }
                           }}
                           title="Delete Transaction"
+                          aria-label={`Delete transaction ${tx.note || tx.category}`}
                           className="p-1.5 rounded-lg border border-white/5 hover:border-red-500/30 text-on-surface-variant hover:text-red-400 hover:bg-red-500/5 transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

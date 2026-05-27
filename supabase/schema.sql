@@ -112,7 +112,25 @@ create table public.loans (
 alter table public.loans enable row level security;
 create policy "Manage own loans" on public.loans for all using (auth.uid() = user_id);
 
--- 6. EXPENSES
+-- 6. CREDIT CARDS
+create table public.credit_cards (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references public.users(id) on delete cascade not null,
+    card_name text not null,
+    bank_name text not null,
+    card_limit numeric not null check (card_limit > 0),
+    outstanding_balance numeric default 0,
+    due_date date not null,
+    statement_date date not null,
+    card_network text not null,
+    card_theme text default 'dark_metal',
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.credit_cards enable row level security;
+create policy "Manage own credit cards" on public.credit_cards for all using (auth.uid() = user_id);
+
+-- 7. EXPENSES
 create table public.expenses (
     id uuid primary key default gen_random_uuid(),
     user_id uuid references public.users(id) on delete cascade not null,
@@ -126,6 +144,7 @@ create table public.expenses (
     tag text, -- need, want, impulse
     trip_id uuid references public.trips(id) on delete set null,
     linked_loan_id uuid references public.loans(id) on delete set null,
+    linked_credit_card_id uuid references public.credit_cards(id) on delete set null,
     is_recurring boolean default false,
     frequency text,
     receipt_url text,
@@ -136,6 +155,20 @@ create table public.expenses (
 
 alter table public.expenses enable row level security;
 create policy "Manage own expenses" on public.expenses for all using (auth.uid() = user_id);
+
+-- 8. CREDIT CARD BILLS
+create table public.credit_card_bills (
+    id uuid primary key default gen_random_uuid(),
+    card_id uuid references public.credit_cards(id) on delete cascade not null,
+    user_id uuid references public.users(id) on delete cascade not null,
+    bill_amount numeric not null check (bill_amount >= 0),
+    due_date date not null,
+    status text default 'unpaid', -- paid, unpaid
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.credit_card_bills enable row level security;
+create policy "Manage own credit card bills" on public.credit_card_bills for all using (auth.uid() = user_id);
 
 -- 7. TRIP_EXPENSES
 create table public.trip_expenses (
@@ -304,6 +337,9 @@ create index idx_sips_user_next on public.sips(user_id, next_payment_date);
 create index idx_budgets_user_date on public.budgets(user_id, month, year);
 create index idx_reminders_user_due on public.reminders(user_id, due_date);
 create index idx_shared_expenses_user_settled on public.shared_expenses(user_id, settled);
+create index idx_credit_cards_user on public.credit_cards(user_id);
+create index idx_credit_card_bills_user on public.credit_card_bills(user_id);
+create index idx_expenses_user_credit_card on public.expenses(user_id, linked_credit_card_id);
 
 
 -- ====================================================
